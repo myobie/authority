@@ -1,14 +1,15 @@
-defmodule Victor.Mixfile do
+defmodule Authority.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :victor,
+      app: :authority,
       version: "0.0.1",
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
       start_permanent: Mix.env == :prod,
+      dialyzer: [plt_add_deps: :transitive],
       aliases: aliases(),
       deps: deps()
     ]
@@ -16,7 +17,7 @@ defmodule Victor.Mixfile do
 
   def application do
     [
-      mod: {Victor.Application, []},
+      mod: {Authority.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -35,7 +36,9 @@ defmodule Victor.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:ueberauth, "~> 0.4"},
-      {:ueberauth_github, "~> 0.4"}
+      {:ueberauth_github, "~> 0.4"},
+      {:ex_machina, "~> 2.0", only: :test},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 

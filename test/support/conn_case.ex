@@ -1,4 +1,4 @@
-defmodule VictorWeb.ConnCase do
+defmodule AuthorityWeb.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -19,18 +19,18 @@ defmodule VictorWeb.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import VictorWeb.Router.Helpers
+      import AuthorityWeb.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint VictorWeb.Endpoint
+      @endpoint AuthorityWeb.Endpoint
     end
   end
 
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Victor.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Authority.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Victor.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Authority.Repo, {:shared, self()})
     end
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end

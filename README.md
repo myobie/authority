@@ -1,4 +1,4 @@
-# Victor
+# Authority
 
 An OpenID Connect compatible authorization server providing a JSON API.
 
@@ -12,3 +12,10 @@ To start your Phoenix server:
   * Start Phoenix endpoint with `mix phx.server`
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+
+
+
+**_Victor?_**
+
+_I used to be named victor. That name was confusing so I got a more generic and
+appropriate name. Just in case you run into any code or file named victor._

@@ -1,13 +1,13 @@
 use Mix.Config
 
-config :victor,
-  ecto_repos: [Victor.Repo]
+config :authority,
+  ecto_repos: [Authority.Repo]
 
-config :victor, VictorWeb.Endpoint,
+config :authority, AuthorityWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "CBFL1okYX6SHw2kP+kLh8YaiC39BdmQ37V0ZwDtXJJAKg6EpgO5qjLMcTyvPSp6q",
-  render_errors: [view: VictorWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Victor.PubSub,
+  render_errors: [view: AuthorityWeb.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: Authority.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 config :logger, :console,

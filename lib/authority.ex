@@ -1,0 +1,2 @@
+defmodule Authority do
+end

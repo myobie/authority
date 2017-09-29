@@ -1,5 +1,5 @@
-defmodule Victor.Repo.Migrations.AddAccountsEmailsAndIdentitiesTables do
-  use Victor.Migration
+defmodule Authority.Repo.Migrations.AddAccountsEmailsAndIdentitiesTables do
+  use Authority.Migration
 
   def change do
     create table(:accounts) do
@@ -42,7 +42,7 @@ defmodule Victor.Repo.Migrations.AddAccountsEmailsAndIdentitiesTables do
 
     create table(:websites) do
       add :identity_id, references(:identities, on_delete: :delete_all), null: false
-      add :url, :string, size: 2048
+      add :url, :string, null: false, size: 2048
       timestamps()
     end
 

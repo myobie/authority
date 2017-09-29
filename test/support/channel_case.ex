@@ -1,4 +1,4 @@
-defmodule VictorWeb.ChannelCase do
+defmodule AuthorityWeb.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -21,15 +21,15 @@ defmodule VictorWeb.ChannelCase do
       use Phoenix.ChannelTest
 
       # The default endpoint for testing
-      @endpoint VictorWeb.Endpoint
+      @endpoint AuthorityWeb.Endpoint
     end
   end
 
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Victor.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Authority.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Victor.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Authority.Repo, {:shared, self()})
     end
     :ok
   end
