@@ -41,7 +41,7 @@ defmodule Authority.AuthTest do
         identity: _identity}},
       result)
 
-    # don't create a second account, but keeps the current one
+    # doesn't create a second account, but keeps the current one
     num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
     assert num_accounts == 1
   end
@@ -57,7 +57,45 @@ defmodule Authority.AuthTest do
         identity: _identity}},
       result)
 
-    # don't create a second account, but keeps the current one
+    # doesn't create a second account, but keeps the current one
+    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    assert num_accounts == 1
+  end
+
+  test "can process an Auth struct with all existing" do
+    account = insert(:account)
+    insert(:email, address: @address, account: account)
+    insert(:identity, uid: "179", provider: "github", account: account)
+
+    result = Authority.Auth.process(@github_auth)
+
+    assert match?({:ok,
+      %{account: _account,
+        email: _email,
+        identity: _identity}},
+      result)
+
+    # doesn't create a second account, but keeps the current one
+    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    assert num_accounts == 1
+  end
+
+  test "can merge accounts" do
+    insert(:email, address: @address)
+    insert(:identity, uid: "179", provider: "github")
+
+    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    assert num_accounts == 2
+
+    result = Authority.Auth.process(@github_auth)
+
+    assert match?({:ok,
+      %{account: _account,
+        email: _email,
+        identity: _identity}},
+      result)
+
+    # merges the two accounts together
     num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
     assert num_accounts == 1
   end

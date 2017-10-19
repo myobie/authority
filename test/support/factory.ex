@@ -11,8 +11,7 @@ defmodule Authority.Factory do
   def email_factory do
     %Authority.Email{
       account: build(:account),
-      address: sequence(:email_address, &"me-#{&1}@example.com"),
-      verified: false
+      address: sequence(:email_address, &"me-#{&1}@example.com")
     }
   end
 

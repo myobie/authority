@@ -12,7 +12,6 @@ defmodule Authority.Repo.Migrations.AddAccountsEmailsAndIdentitiesTables do
 
     create table(:emails) do
       add :address, :string, size: 1024, null: false
-      add :verified, :boolean, null: false
       add :account_id, references(:accounts, on_delete: :delete_all), null: false
       timestamps()
     end

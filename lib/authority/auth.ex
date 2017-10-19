@@ -2,9 +2,6 @@ defmodule Authority.Auth do
   alias Authority.{Account, Email, Identity, Repo}
   import Ecto.Query
 
-  @trusted_providers MapSet.new([:github])
-  @trusted_providers_list MapSet.to_list(@trusted_providers)
-
   def process(%Ueberauth.Auth{} = auth) do
     Repo.transaction(fn ->
       find_or_create(auth)
@@ -17,8 +14,10 @@ defmodule Authority.Auth do
         insert_all(auth)
       {email, nil} ->
         insert_identity_related_to(email, auth)
-      _ ->
-        raise "not implemented yet"
+      {nil, identity} ->
+        insert_email_related_to(identity, auth)
+      {email, identity} ->
+        update_all(email, identity, auth)
     end
   end
 
@@ -32,6 +31,7 @@ defmodule Authority.Auth do
   end
 
   def insert_all(auth) do
+    # TODO: support providers that don't provide an email address
     process_for_transaction(fn ->
       Ecto.Multi.new
       |> Ecto.Multi.insert(:account, account_changeset(auth))
@@ -52,10 +52,34 @@ defmodule Authority.Auth do
       |> Ecto.Multi.run(:account, fn _ ->
         update_empty_account_info(account, auth)
       end)
-      |> Ecto.Multi.run(:email, fn _ ->
-        update_email_verification_status(email, auth.provider)
-      end)
       |> Ecto.Multi.insert(:identity, identity_changeset(auth, account))
+      |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
+    end)
+  end
+
+  def insert_email_related_to(identity, auth) do
+    %{account: account} = Repo.preload(identity, :account)
+
+    process_for_transaction(fn ->
+      Ecto.Multi.new
+      |> Ecto.Multi.run(:account, fn _ ->
+        update_empty_account_info(account, auth)
+      end)
+      |> Ecto.Multi.insert(:email, email_changeset(auth, account))
+      |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
+    end)
+  end
+
+  def update_all(email, identity, auth) do
+    %{account: account} = Repo.preload(identity, :account)
+
+    process_for_transaction(fn ->
+      Ecto.Multi.new
+      |> Ecto.Multi.run(:account, fn _ ->
+        update_empty_account_info(account, auth)
+      end)
+      |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
+      |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
     end)
   end
 
@@ -80,15 +104,6 @@ defmodule Authority.Auth do
     |> Repo.update()
   end
 
-  def update_email_verification_status(%{verified: false} = email, provider) when provider in @trusted_providers_list do
-    email
-    |> Ecto.Changeset.change(verified: true)
-    |> Repo.update()
-  end
-
-  def update_email_verification_status(email, _provider),
-    do: {:ok, email}
-
   def find_email(%Ueberauth.Auth{} = auth),
     do: find_email(auth.info.email)
 
@@ -106,17 +121,9 @@ defmodule Authority.Auth do
 
   def extract_email_params(auth) do
     %{
-      address: auth.info.email,
-      verified: is_verified?(auth)
+      address: auth.info.email
     }
   end
-
-  @spec is_verified?(%{provider: String.t | atom}) :: boolean
-  defp is_verified?(%{provider: provider}) when is_atom(provider),
-    do: is_verified?(%{provider: to_string(provider)})
-
-  defp is_verified?(%{provider: provider}),
-    do: MapSet.member?(@trusted_providers, provider)
 
   def find_identity(%Ueberauth.Auth{provider: provider, uid: uid}),
     do: find_identity(to_string(provider), to_string(uid))
