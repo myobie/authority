@@ -16,10 +16,15 @@ config :logger, :console,
 
 config :ueberauth, Ueberauth,
   providers: [
-    github: {Ueberauth.Strategy.Github, []}
+    github: {Ueberauth.Strategy.Github, []},
+    microsoft: {Ueberauth.Strategy.Microsoft, []}
   ]
 
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
+  client_id: "add to secret file",
+  client_secret: "add to secret file"
+
+config :ueberauth, Ueberauth.Strategy.Microsoft.OAuth,
   client_id: "add to secret file",
   client_secret: "add to secret file"
 

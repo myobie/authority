@@ -146,12 +146,18 @@ defmodule Authority.Auth do
       provider: to_string(auth.provider),
       uid: to_string(auth.uid),
       access_token: auth.credentials.token,
-      access_token_expires_at: auth.credentials.expires_at,
+      access_token_expires_at: parse_datetime(auth.credentials.expires_at),
       refresh_token: auth.credentials.refresh_token,
-      scope: Enum.join(auth.credentials.scopes, " "),
+      scope: scopes(auth.credentials.scopes),
       raw: Map.from_struct(auth)
     }
   end
+
+  defp parse_datetime(dt) when is_integer(dt), do: Timex.from_unix(dt)
+  defp parse_datetime(dt), do: dt
+
+  defp scopes(string) when is_binary(string), do: string
+  defp scopes(list) when is_list(list), do: Enum.join(list, " ")
 
   def account_changeset(auth) do
     extract_account_params(auth)

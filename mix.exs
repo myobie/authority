@@ -35,8 +35,12 @@ defmodule Authority.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
+      {:jose, "~> 1.8"},
+      {:timex, "~> 3.1"},
+      {:secure_random, "~> 0.5.1"},
       {:ueberauth, "~> 0.4"},
       {:ueberauth_github, "~> 0.4"},
+      {:ueberauth_microsoft, "~> 0.3"},
       {:ex_machina, "~> 2.0", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
     ]

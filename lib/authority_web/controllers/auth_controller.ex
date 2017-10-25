@@ -4,6 +4,33 @@ defmodule AuthorityWeb.AuthController do
   use AuthorityWeb, :controller
   plug Ueberauth
 
+  alias Authority.{Auth, Clients, OpenID}
+
+  def authorize(conn,
+                %{"response_type" => "id_token",
+                  "client_id" => client_id,
+                  "redirect_uri" => redirect_uri,
+                  "scope" => "openid profile",
+                  "nonce" => nonce,
+                  "provider" => provider} = params)
+  do
+    with {:ok, _client} <- Clients.fetch(client_id, redirect_uri) do
+      conn
+      |> put_session("nonce", nonce)
+      |> put_session("client_id", client_id)
+      |> put_session("redirect_uri", redirect_uri)
+      |> put_session("state", params["state"])
+      |> put_session("claims", params["claims"])
+      |> redirect(to: "/auth/#{provider}") # TODO: validate the provider and allow clients to limit the providers they want to use
+    end
+  end
+
+  def authorize(conn, _params) do
+    conn
+    |> put_status(404)
+    |> json(%{error: "Request type not supported yet. Authority only supports response_type=id_token and scope=openid profile (Implicit flow with simple scope) right now."})
+  end
+
   def request(_conn, _params) do
     raise "What do I do here?"
   end
@@ -22,21 +49,40 @@ defmodule AuthorityWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    Logger.debug inspect(auth)
+    with {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth),
+         {:ok, client} <- Clients.fetch(get_session(conn, "client_id"), get_session(conn, "redirect_uri"))
+    do
+      req = %OpenID.AuthorizationRequest{
+        account: account,
+        email: email,
+        identity: identity,
+        client: client,
+        nonce: get_session(conn, "nonce"),
+        claims: get_claims(conn)
+      }
 
-    conn
-    |> redirect(to: "/")
+      jwt = OpenID.signed_id_token(req)
+      state = get_session(conn, "state")
+      query = URI.encode_query(%{"id_token" => jwt, "state" => state})
 
-    # case Authority.Accounts.upsert(auth) do
-    #   {:ok, account} ->
-    #     conn
-    #     |> put_flash(:info, "Successfully authenticated.")
-    #     |> put_session(:current_account, account)
-    #     |> redirect(to: "/")
-    #   {:error, reason} ->
-    #     conn
-    #     |> put_flash(:error, reason)
-    #     |> redirect(to: "/")
-    # end
+      uri = client.redirect_uri
+            |> URI.parse()
+            |> Map.put(:query, query)
+            |> to_string()
+
+      conn
+      |> configure_session(drop: true)
+      |> redirect(external: uri)
+    end
+  end
+
+  defp get_claims(conn) do
+    with claims_string when not is_nil(claims_string) <- get_session(conn, "claims"),
+         {:ok, claims} <- Poison.decode(claims_string)
+    do
+      claims
+    else
+      _ -> %{}
+    end
   end
 end

@@ -26,5 +26,6 @@ defmodule AuthorityWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    get "/authorize", AuthController, :authorize
   end
 end
