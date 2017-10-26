@@ -32,8 +32,10 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 - [ ] Validate the `provider` param in `/authorize`
 - [ ] Fix merge accounts test
 - [ ] Document how to create public/private key pairs (JWKs)
-- [ ] Make it possible for clients to limit their allows providers
+- [ ] Make it possible for clients to limit their allowed providers
 - [ ] Add a few more providers for testing
+- [ ] Start an `authority_client` library for use in Plug/Phoenix applications
+- [ ] Start an `ueberauth` strategy
 - [ ] What to do with a provider that doesn't provide an email address?
 
 
