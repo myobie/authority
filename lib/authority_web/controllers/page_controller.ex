@@ -2,6 +2,6 @@ defmodule AuthorityWeb.PageController do
   use AuthorityWeb, :controller
 
   def index(conn, _params) do
-    render conn, "index.html"
+    text conn, "Welcome to Authority."
   end
 end

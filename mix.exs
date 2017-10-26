@@ -4,7 +4,7 @@ defmodule Authority.Mixfile do
   def project do
     [
       app: :authority,
-      version: "0.0.1",
+      version: version(),
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env),
       compilers: [:phoenix, :gettext] ++ Mix.compilers,
@@ -13,6 +13,15 @@ defmodule Authority.Mixfile do
       aliases: aliases(),
       deps: deps()
     ]
+  end
+
+  @default_vsn "0.0.0"
+
+  def version do
+    case File.read("./VERSION") do
+      {:ok, vsn} -> vsn |> String.trim()
+      _ -> @default_vsn
+    end
   end
 
   def application do
@@ -41,8 +50,10 @@ defmodule Authority.Mixfile do
       {:ueberauth, "~> 0.4"},
       {:ueberauth_github, "~> 0.4"},
       {:ueberauth_microsoft, "~> 0.3"},
-      {:ex_machina, "~> 2.0", only: :test},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false}
+      {:ex_machina, "~> 2.0", only: [:test]},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:distillery, "~> 1.5"},
+      {:build_release, github: "myobie/build_release", only: [:dev]}
     ]
   end
 

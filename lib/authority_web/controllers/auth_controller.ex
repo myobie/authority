@@ -6,6 +6,8 @@ defmodule AuthorityWeb.AuthController do
 
   alias Authority.{Auth, Clients, OpenID}
 
+  action_fallback AuthorityWeb.FallbackController
+
   def authorize(conn,
                 %{"response_type" => "id_token",
                   "client_id" => client_id,
