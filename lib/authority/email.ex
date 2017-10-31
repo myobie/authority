@@ -9,15 +9,17 @@ defmodule Authority.Email do
     timestamps()
   end
 
+  def format(address) do
+    address
+    |> String.trim()
+    |> String.downcase()
+  end
+
   @spec changeset(t, map, [account: Authority.Account.t]) :: Changeset.t
   def changeset(%__MODULE__{} = email \\ %__MODULE__{}, attrs, [account: account]) do
     email
     |> cast(attrs, [:address])
-    |> update_change(:address, fn address ->
-      address
-      |> String.trim()
-      |> String.downcase()
-    end)
+    |> update_change(:address, &format/1)
     |> unique_constraint(:address)
     |> put_assoc(:account, account)
     |> foreign_key_constraint(:account_id)

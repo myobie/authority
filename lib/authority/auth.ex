@@ -108,6 +108,8 @@ defmodule Authority.Auth do
     do: find_email(auth.info.email)
 
   def find_email(address) when is_binary(address) do
+    address = Email.format(address)
+
     from(e in Email,
          where: e.address == ^address,
          lock: "FOR UPDATE")
