@@ -44,7 +44,9 @@ defmodule AuthorityWeb.AuthController do
     |> redirect(to: "/")
   end
 
-  def callback(%{assigns: %{ueberauth_failure: _fails}} = conn, _params) do
+  def callback(%{assigns: %{ueberauth_failure: fails}} = conn, _params) do
+    Logger.error "Authentication failure: #{inspect fails}"
+
     conn
     |> put_flash(:error, "Failed to authenticate.")
     |> redirect(to: "/")

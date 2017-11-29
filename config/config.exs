@@ -17,7 +17,8 @@ config :logger, :console,
 config :ueberauth, Ueberauth,
   providers: [
     github: {Ueberauth.Strategy.Github, []},
-    microsoft: {Ueberauth.Strategy.Microsoft, []}
+    microsoft: {Ueberauth.Strategy.Microsoft, []},
+    vsts: {Ueberauth.Strategy.VSTS, [default_scope: "vso.code_write"]}
   ]
 
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
