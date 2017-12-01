@@ -55,7 +55,7 @@ defmodule AuthorityWeb.AuthController do
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     with {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth),
       {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
-      {:ok, client} <- Clients.fetch(get_session(conn, "client_id"), get_session(conn, "redirect_uri"))
+      {:ok, client} <- Clients.fetch(client_id, redirect_uri)
     do
       req = %OpenID.AuthorizationRequest{
         account: account,
