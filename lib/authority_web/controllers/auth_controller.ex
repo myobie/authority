@@ -54,7 +54,8 @@ defmodule AuthorityWeb.AuthController do
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     with {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth),
-         {:ok, client} <- Clients.fetch(get_session(conn, "client_id"), get_session(conn, "redirect_uri"))
+      {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
+      {:ok, client} <- Clients.fetch(get_session(conn, "client_id"), get_session(conn, "redirect_uri"))
     do
       req = %OpenID.AuthorizationRequest{
         account: account,
@@ -77,6 +78,16 @@ defmodule AuthorityWeb.AuthController do
       conn
       |> configure_session(drop: true)
       |> redirect(external: uri)
+    end
+  end
+
+  defp get_client_id_and_redirect_uri_from_session(conn) do
+    with client_id when not is_nil(client_id) <- get_session(conn, "client_id"),
+      redirect_uri when not is_nil(redirect_uri) <- get_session(conn, "redirect_uri")
+    do
+      {:ok, client_id, redirect_uri}
+    else
+      _ -> {:error, :forgotten_original_client_destination}
     end
   end
 
