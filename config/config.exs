@@ -29,6 +29,10 @@ config :ueberauth, Ueberauth.Strategy.Microsoft.OAuth,
   client_id: "add to secret file",
   client_secret: "add to secret file"
 
+config :ueberauth, Ueberauth.Strategy.VSTS.OAuth,
+  client_id: "add to secret file",
+  client_secret: "add to secret file"
+
 config :authority, :rsa_keys, private: nil, public: nil
 # One needs to generate a public/private key pair (JWK format) and add
 # them to one of the secret.exs files
