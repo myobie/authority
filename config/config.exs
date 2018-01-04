@@ -18,7 +18,7 @@ config :ueberauth, Ueberauth,
   providers: [
     github: {Ueberauth.Strategy.Github, []},
     microsoft: {Ueberauth.Strategy.Microsoft, []},
-    vsts: {Ueberauth.Strategy.VSTS, [default_scope: "vso.code_write"]}
+    vso: {Ueberauth.Strategy.VSO, [default_scope: "vso.code_write"]}
   ]
 
 config :ueberauth, Ueberauth.Strategy.Github.OAuth,
@@ -29,7 +29,7 @@ config :ueberauth, Ueberauth.Strategy.Microsoft.OAuth,
   client_id: "add to secret file",
   client_secret: "add to secret file"
 
-config :ueberauth, Ueberauth.Strategy.VSTS.OAuth,
+config :ueberauth, Ueberauth.Strategy.VSO.OAuth,
   client_id: "add to secret file",
   client_secret: "add to secret file"
 
