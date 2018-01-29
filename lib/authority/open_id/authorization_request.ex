@@ -5,7 +5,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     client: nil,
     nonce: nil,
     now: Timex.now(),
-    claims: %{}
+    claims: []
 
   @type t :: %__MODULE__{}
 end

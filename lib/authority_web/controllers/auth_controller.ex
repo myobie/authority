@@ -8,21 +8,16 @@ defmodule AuthorityWeb.AuthController do
 
   action_fallback AuthorityWeb.FallbackController
 
-  def authorize(conn,
-                %{"response_type" => "id_token",
-                  "client_id" => client_id,
-                  "redirect_uri" => redirect_uri,
-                  "scope" => "openid profile",
-                  "nonce" => nonce,
-                  "provider" => provider} = params)
-  do
+  def authorize(conn, %{"client_id" => client_id,
+                        "redirect_uri" => redirect_uri,
+                        "provider" => provider} = params) do
     with {:ok, _client} <- Clients.fetch(client_id, redirect_uri) do
       conn
-      |> put_session("nonce", nonce)
       |> put_session("client_id", client_id)
       |> put_session("redirect_uri", redirect_uri)
+      |> put_session("scope", params["scope"])
       |> put_session("state", params["state"])
-      |> put_session("claims", params["claims"])
+      |> put_session("nonce", params["nonce"])
       |> redirect(to: "/auth/#{provider}") # TODO: validate the provider and allow clients to limit the providers they want to use
     end
   end
@@ -63,7 +58,7 @@ defmodule AuthorityWeb.AuthController do
         identity: identity,
         client: client,
         nonce: get_session(conn, "nonce"),
-        claims: get_claims(conn)
+        claims: get_claims(get_session(conn, "scope"))
       }
 
       jwt = OpenID.signed_id_token(req)
@@ -91,13 +86,11 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
-  defp get_claims(conn) do
-    with claims_string when not is_nil(claims_string) <- get_session(conn, "claims"),
-         {:ok, claims} <- Poison.decode(claims_string)
-    do
-      claims
+  defp get_claims(scope) do
+    if String.contains?(scope, "email") do
+      ["email"]
     else
-      _ -> %{}
+      []
     end
   end
 end

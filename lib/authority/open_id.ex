@@ -1,17 +1,13 @@
 defmodule Authority.OpenID do
-  @rsa_private_key Application.get_env(:authority, :rsa_keys) |> Keyword.get(:private) |> JOSE.JWK.from()
-  @rsa_public_key Application.get_env(:authority, :rsa_keys) |> Keyword.get(:public) |> JOSE.JWK.from()
+  @jwk Application.get_env(:authority, :jwk) |> JOSE.JWK.from()
   @expires_from_now [days: 2]
 
   alias Authority.OpenID.{AuthorizationRequest, IDToken}
 
-  def rsa_private_key, do: @rsa_private_key
-  def rsa_public_key, do: @rsa_public_key
-
-  @essential_email_claim %{"id_token" => %{"email" => %{"essential" => true}}}
+  def jwk, do: @jwk
 
   @spec id_token(AuthorizationRequest.t) :: IDToken.t
-  def id_token(%{claims: @essential_email_claim, email: %{address: address}} = req) do
+  def id_token(%{claims: ["email"], email: %{address: address}} = req) do
     req
     |> Map.put(:claims, %{})
     |> id_token()

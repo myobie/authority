@@ -33,10 +33,9 @@ config :ueberauth, Ueberauth.Strategy.VSO.OAuth,
   client_id: "add to secret file",
   client_secret: "add to secret file"
 
-config :authority, :rsa_keys, private: nil, public: nil
+config :authority, :jwk, nil
 # One needs to generate a public/private key pair (JWK format) and add
 # them to one of the secret.exs files
-# TODO: document here how to generate a key pair
 
 config :authority, :clients, []
 # a client looks like:
