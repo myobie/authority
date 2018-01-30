@@ -8,8 +8,13 @@ defmodule Authority.Account do
     field :preferred_username, :string
     field :avatar_url, :string
     field :timezone, :string
+
     belongs_to :primary_email, Authority.Email
     belongs_to :primary_website, Authority.Website
+
+    has_many :emails, Authority.Email
+    has_many :identities, Authority.Identity
+
     timestamps()
   end
 

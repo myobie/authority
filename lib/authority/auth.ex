@@ -3,9 +3,15 @@ defmodule Authority.Auth do
   import Ecto.Query
 
   def process(%Ueberauth.Auth{} = auth) do
-    Repo.transaction(fn ->
-      find_or_create(auth)
-    end)
+    case Repo.transaction(find_or_create(auth)) do
+      {:ok, result} ->
+        {:ok, result}
+      {:error, failed_op, failed_value, changes} ->
+        Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
+      other ->
+        IO.inspect(other)
+        raise "what?"
+    end
   end
 
   def find_or_create(auth) do
@@ -17,73 +23,89 @@ defmodule Authority.Auth do
       {nil, identity} ->
         insert_email_related_to(identity, auth)
       {email, identity} ->
-        update_all(email, identity, auth)
-    end
-  end
-
-  defp process_for_transaction(multi_fun) do
-    case multi_fun.() |> Repo.transaction() do
-      {:ok, result} ->
-        result
-      {:error, failed_op, failed_value, changes} ->
-        Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
+        if email.account_id == identity.account_id do
+          update_all(email, identity, auth)
+        else
+          merge_and_update_all(email, identity, auth)
+        end
     end
   end
 
   def insert_all(auth) do
     # TODO: support providers that don't provide an email address
-    process_for_transaction(fn ->
-      Ecto.Multi.new
-      |> Ecto.Multi.insert(:account, account_changeset(auth))
-      |> Ecto.Multi.run(:email, fn %{account: account} ->
-        Repo.insert(email_changeset(auth, account))
-      end)
-      |> Ecto.Multi.run(:identity, fn %{account: account} ->
-        Repo.insert(identity_changeset(auth, account))
-      end)
+
+    Ecto.Multi.new
+    |> Ecto.Multi.insert(:account, account_changeset(auth))
+    |> Ecto.Multi.run(:email, fn %{account: account} ->
+      Repo.insert(email_changeset(auth, account))
+    end)
+    |> Ecto.Multi.run(:identity, fn %{account: account} ->
+      Repo.insert(identity_changeset(auth, account))
     end)
   end
 
   def insert_identity_related_to(email, auth) do
     %{account: account} = Repo.preload(email, :account)
 
-    process_for_transaction(fn ->
-      Ecto.Multi.new
-      |> Ecto.Multi.run(:account, fn _ ->
-        update_empty_account_info(account, auth)
-      end)
-      |> Ecto.Multi.insert(:identity, identity_changeset(auth, account))
-      |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
+    Ecto.Multi.new
+    |> Ecto.Multi.run(:account, fn _ ->
+      update_empty_account_info(account, auth)
     end)
+    |> Ecto.Multi.insert(:identity, identity_changeset(auth, account))
+    |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
   end
 
   def insert_email_related_to(identity, auth) do
     %{account: account} = Repo.preload(identity, :account)
 
-    process_for_transaction(fn ->
-      Ecto.Multi.new
-      |> Ecto.Multi.run(:account, fn _ ->
-        update_empty_account_info(account, auth)
-      end)
-      |> Ecto.Multi.insert(:email, email_changeset(auth, account))
-      |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
+    Ecto.Multi.new
+    |> Ecto.Multi.run(:account, fn _ ->
+      update_empty_account_info(account, auth)
     end)
+    |> Ecto.Multi.insert(:email, email_changeset(auth, account))
+    |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
   end
 
   def update_all(email, identity, auth) do
     %{account: account} = Repo.preload(identity, :account)
 
-    process_for_transaction(fn ->
-      Ecto.Multi.new
-      |> Ecto.Multi.run(:account, fn _ ->
-        update_empty_account_info(account, auth)
-      end)
-      |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
-      |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
+    Ecto.Multi.new
+    |> Ecto.Multi.run(:account, fn _ ->
+      update_empty_account_info(account, auth)
+    end)
+    |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
+    |> Ecto.Multi.run(:identity, fn _ -> {:ok, identity} end)
+  end
+
+  def merge_and_update_all(email, identity, auth) do
+    # NOTE: the old_account is considered the one that should live
+
+    %{account: old_account} = Repo.preload(email, :account)
+    %{account: new_account} = Repo.preload(identity, :account)
+
+    Ecto.Multi.new
+    |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
+    |> Ecto.Multi.run(:identity, fn _ ->
+      with {:ok, _} <- move_identities_from_account_to_account(new_account.id, old_account.id) do
+        {:ok, identity}
+      end
+    end)
+    |> Ecto.Multi.run(:account, fn _ ->
+      with {:ok, _} <- Repo.delete(new_account) do
+        update_empty_account_info(old_account, auth)
+      end
     end)
   end
 
-  def update_empty_account_info(account, auth) do
+  defp move_identities_from_account_to_account(from_account_id, to_account_id) do
+    case from(i in Identity, where: i.account_id == ^from_account_id)
+         |> Repo.update_all(set: [account_id: to_account_id]) do
+      {num, _} -> {:ok, num}
+      other -> other
+    end
+  end
+
+  defp update_empty_account_info(account, auth) do
     existing = %{
       name: account.name,
       preferred_username: account.preferred_username,
