@@ -27,5 +27,6 @@ defmodule AuthorityWeb.Router do
 
     get "/", PageController, :index
     get "/authorize", AuthController, :authorize
+    post "/token", AuthController, :token
   end
 end

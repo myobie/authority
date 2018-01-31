@@ -14,8 +14,7 @@ defmodule Authority.Repo.Migrations.CreateAuthorizationRequest do
     end
 
     create index(:authorization_requests, [:account_id])
-    create index(:authorization_requests, [:code, :client_id, :inserted_at])
-    create index(:authorization_requests, [:code, :client_id, :claimed_at])
+    create index(:authorization_requests, [:code, :client_id, :claimed_at, :inserted_at])
     create index(:authorization_requests, [:refresh_token, :client_id, :claimed_at])
   end
 end

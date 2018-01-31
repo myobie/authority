@@ -91,8 +91,7 @@ defmodule AuthorityWeb.AuthController do
 
   defp get_client_id_and_redirect_uri_from_session(conn) do
     with client_id when not is_nil(client_id) <- get_session(conn, "client_id"),
-      redirect_uri when not is_nil(redirect_uri) <- get_session(conn, "redirect_uri")
-    do
+         redirect_uri when not is_nil(redirect_uri) <- get_session(conn, "redirect_uri") do
       {:ok, client_id, redirect_uri}
     else
       _ -> {:error, :forgotten_original_client_destination}
@@ -104,6 +103,18 @@ defmodule AuthorityWeb.AuthController do
       ["email"]
     else
       []
+    end
+  end
+
+  def token(conn, %{"code" => code, "grant_type" => "authorization_code", "redirect_uri" => redirect_uri, "client_id" => client_id, "client_secret" => client_secret}) do
+    with {:ok, token_response} <- OpenID.token_response(:code, code, client_id, client_secret, redirect_uri) do
+      json(conn, token_response)
+    end
+  end
+
+  def token(conn, %{"refresh_token" => refresh_token, "grant_type" => "refresh_token", "redirect_uri" => redirect_uri, "client_id" => client_id, "client_secret" => client_secret}) do
+    with {:ok, token_response} <- OpenID.token_response(:refresh, refresh_token, client_id, client_secret, redirect_uri) do
+      json(conn, token_response)
     end
   end
 end
