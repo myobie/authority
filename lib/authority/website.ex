@@ -4,13 +4,13 @@ defmodule Authority.Website do
   @type t :: %__MODULE__{}
 
   schema "websites" do
-    belongs_to :identity, Authority.Identity
-    field :url, :string
+    belongs_to(:identity, Authority.Identity)
+    field(:url, :string)
   end
 
-  @spec changeset(map, [identity: Authority.Identity.t]) :: Changeset.t
-  @spec changeset(t, map, [identity: Authority.Identity.t]) :: Changeset.t
-  def changeset(%__MODULE__{} = website \\ %__MODULE__{}, attrs, [identity: identity]) do
+  @spec changeset(map, identity: Authority.Identity.t()) :: Changeset.t()
+  @spec changeset(t, map, identity: Authority.Identity.t()) :: Changeset.t()
+  def changeset(%__MODULE__{} = website \\ %__MODULE__{}, attrs, identity: identity) do
     website
     |> cast(attrs, [:url])
     |> put_assoc(:identity, identity)

@@ -16,7 +16,10 @@ defmodule Mix.Tasks.Keypair do
       IO.puts("Public key:")
       IO.puts(public_key_binary)
       IO.puts("")
-      IO.puts("The private/public keypair is only for Authority. The public key is for any app that needs to verify signed JWT's created by Authority.")
+
+      IO.puts(
+        "The private/public keypair is only for Authority. The public key is for any app that needs to verify signed JWT's created by Authority."
+      )
     else
       error ->
         IO.puts("Error generating keypair: #{inspect(error)}")

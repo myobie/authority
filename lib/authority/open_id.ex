@@ -49,11 +49,14 @@ defmodule Authority.OpenID do
   end
 
   defp authorization_request_changeset(account, client) do
-    AuthorizationRequest.changeset(%{
-      client_id: client.client_id,
-      code: SecureRandom.urlsafe_base64(128) |> String.trim_trailing("="),
-      refresh_token: SecureRandom.urlsafe_base64(128) |> String.trim_trailing("=")
-    }, account: account)
+    AuthorizationRequest.changeset(
+      %{
+        client_id: client.client_id,
+        code: SecureRandom.urlsafe_base64(128) |> String.trim_trailing("="),
+        refresh_token: SecureRandom.urlsafe_base64(128) |> String.trim_trailing("=")
+      },
+      account: account
+    )
   end
 
   def token_response(:code, code, client_id, client_secret, redirect_uri) do
@@ -66,31 +69,34 @@ defmodule Authority.OpenID do
          {:ok, id_token} <- AuthorizationRequest.signed_id_token(req, from_now),
          {:ok, access_token} <- AuthorizationRequest.signed_access_token(req, from_now),
          expires_in = Timex.now() |> Timex.shift(from_now) |> Timex.to_unix() do
-      {:ok, %{
-        id_token: id_token,
-        access_token: access_token,
-        refresh_token: req.refresh_token,
-        expires_in: expires_in
-      }}
+      {:ok,
+       %{
+         id_token: id_token,
+         access_token: access_token,
+         refresh_token: req.refresh_token,
+         expires_in: expires_in
+       }}
     end
   end
 
-  def token_response(:refresh, refresh_token, client_id, client_secret, redirect_uri) do
+  def token_response(:refresh, refresh_token, client_id, client_secret) do
     from_now = [days: 2]
 
-    with {:ok, client} <- Clients.fetch(client_id, redirect_uri),
+    with {:ok, client} <- Clients.fetch(client_id),
          :ok <- Clients.secret_match?(client, client_secret),
-         {:ok, old_req} <- fetch_authorization_request_by_refresh_token_and_client_id(refresh_token, client_id),
+         {:ok, old_req} <-
+           fetch_authorization_request_by_refresh_token_and_client_id(refresh_token, client_id),
          {:ok, new_req} <- refresh_authorization_request(old_req),
          {:ok, id_token} <- AuthorizationRequest.signed_id_token(new_req, from_now),
          {:ok, access_token} <- AuthorizationRequest.signed_access_token(new_req, from_now),
          expires_in = Timex.now() |> Timex.shift(from_now) |> Timex.to_unix() do
-      {:ok, %{
-        id_token: id_token,
-        access_token: access_token,
-        refresh_token: new_req.refresh_token,
-        expires_in: expires_in
-      }}
+      {:ok,
+       %{
+         id_token: id_token,
+         access_token: access_token,
+         refresh_token: new_req.refresh_token,
+         expires_in: expires_in
+       }}
     end
   end
 

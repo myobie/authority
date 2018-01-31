@@ -2,17 +2,24 @@ defmodule AuthorityWeb.AuthController do
   require Logger
 
   use AuthorityWeb, :controller
-  plug Ueberauth
+  plug(Ueberauth)
 
   alias Authority.{Auth, Clients, OpenID}
 
-  action_fallback AuthorityWeb.FallbackController
+  action_fallback(AuthorityWeb.FallbackController)
 
-  def authorize(conn, %{"client_id" => client_id,
-                        "redirect_uri" => redirect_uri,
-                        "response_type" => response_type,
-                        "provider" => provider} = params) when response_type in ["id_token", "code"] do
+  def authorize(
+        conn,
+        %{
+          "client_id" => client_id,
+          "redirect_uri" => redirect_uri,
+          "response_type" => response_type,
+          "provider" => provider
+        } = params
+      )
+      when response_type in ["id_token", "code"] do
     with {:ok, _client} <- Clients.fetch(client_id, redirect_uri) do
+      # TODO: validate the provider and allow clients to limit the providers they want to use
       conn
       |> put_session("client_id", client_id)
       |> put_session("redirect_uri", redirect_uri)
@@ -20,7 +27,7 @@ defmodule AuthorityWeb.AuthController do
       |> put_session("scope", params["scope"])
       |> put_session("state", params["state"])
       |> put_session("nonce", params["nonce"])
-      |> redirect(to: "/auth/#{provider}") # TODO: validate the provider and allow clients to limit the providers they want to use
+      |> redirect(to: "/auth/#{provider}")
     end
   end
 
@@ -42,7 +49,7 @@ defmodule AuthorityWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_failure: fails}} = conn, _params) do
-    Logger.error "Authentication failure: #{inspect fails}"
+    Logger.error("Authentication failure: #{inspect(fails)}")
 
     conn
     |> put_flash(:error, "Failed to authenticate.")
@@ -58,6 +65,7 @@ defmodule AuthorityWeb.AuthController do
           conn
           |> put_status(400)
           |> json(%{error: "Request not supported"})
+
         "id_token" ->
           implicit_callback(conn, %OpenID.ImplicitAuthorizationRequest{
             account: account,
@@ -67,6 +75,7 @@ defmodule AuthorityWeb.AuthController do
             nonce: get_session(conn, "nonce"),
             claims: get_claims(get_session(conn, "scope"))
           })
+
         "code" ->
           code_callback(conn, account, client)
       end
@@ -106,14 +115,27 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
-  def token(conn, %{"code" => code, "grant_type" => "authorization_code", "redirect_uri" => redirect_uri, "client_id" => client_id, "client_secret" => client_secret}) do
-    with {:ok, token_response} <- OpenID.token_response(:code, code, client_id, client_secret, redirect_uri) do
+  def token(conn, %{
+        "code" => code,
+        "grant_type" => "authorization_code",
+        "redirect_uri" => redirect_uri,
+        "client_id" => client_id,
+        "client_secret" => client_secret
+      }) do
+    with {:ok, token_response} <-
+           OpenID.token_response(:code, code, client_id, client_secret, redirect_uri) do
       json(conn, token_response)
     end
   end
 
-  def token(conn, %{"refresh_token" => refresh_token, "grant_type" => "refresh_token", "redirect_uri" => redirect_uri, "client_id" => client_id, "client_secret" => client_secret}) do
-    with {:ok, token_response} <- OpenID.token_response(:refresh, refresh_token, client_id, client_secret, redirect_uri) do
+  def token(conn, %{
+        "refresh_token" => refresh_token,
+        "grant_type" => "refresh_token",
+        "client_id" => client_id,
+        "client_secret" => client_secret
+      }) do
+    with {:ok, token_response} <-
+           OpenID.token_response(:refresh, refresh_token, client_id, client_secret) do
       json(conn, token_response)
     end
   end

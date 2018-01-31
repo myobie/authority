@@ -3,7 +3,7 @@ defmodule Authority.OpenID.JWT do
 
   @spec sign(map) :: {map, binary}
   def sign(jwt) do
-    JOSE.JWT.sign(Authority.OpenID.jwk, jwt) |> JOSE.JWS.compact()
+    JOSE.JWT.sign(Authority.OpenID.jwk(), jwt) |> JOSE.JWS.compact()
   end
 
   @spec sign!(map) :: binary
@@ -11,7 +11,7 @@ defmodule Authority.OpenID.JWT do
 
   @spec verify(binary) :: {true, map} | {false, term}
   def verify(compact_signed_jwt) do
-    case JOSE.JWT.verify_strict(Authority.OpenID.jwk, @jwk_types, compact_signed_jwt) do
+    case JOSE.JWT.verify_strict(Authority.OpenID.jwk(), @jwk_types, compact_signed_jwt) do
       {true, jwt, _jws} -> {true, jwt.fields}
       other -> other
     end

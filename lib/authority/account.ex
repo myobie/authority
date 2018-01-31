@@ -2,24 +2,24 @@ defmodule Authority.Account do
   use Authority.Schema
 
   schema "accounts" do
-    field :name, :string
-    field :preferred_username, :string
-    field :avatar_url, :string
-    field :timezone, :string
+    field(:name, :string)
+    field(:preferred_username, :string)
+    field(:avatar_url, :string)
+    field(:timezone, :string)
 
-    belongs_to :primary_email, Authority.Email
-    belongs_to :primary_website, Authority.Website
+    belongs_to(:primary_email, Authority.Email)
+    belongs_to(:primary_website, Authority.Website)
 
-    has_many :emails, Authority.Email
-    has_many :identities, Authority.Identity
+    has_many(:emails, Authority.Email)
+    has_many(:identities, Authority.Identity)
 
     timestamps()
   end
 
   @type t :: %__MODULE__{}
 
-  @spec changeset(map) :: Changeset.t
-  @spec changeset(t, map) :: Changeset.t
+  @spec changeset(map) :: Changeset.t()
+  @spec changeset(t, map) :: Changeset.t()
   def changeset(%__MODULE__{} = account \\ %__MODULE__{}, attrs) do
     account
     |> cast(attrs, [:name, :preferred_username, :avatar_url, :timezone])

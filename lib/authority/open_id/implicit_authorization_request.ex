@@ -1,11 +1,11 @@
 defmodule Authority.OpenID.ImplicitAuthorizationRequest do
   defstruct account: nil,
-    email: nil,
-    identity: nil,
-    client: nil,
-    nonce: nil,
-    now: Timex.now(),
-    claims: []
+            email: nil,
+            identity: nil,
+            client: nil,
+            nonce: nil,
+            now: Timex.now(),
+            claims: []
 
   alias Authority.OpenID.IDToken
 
@@ -13,7 +13,7 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequest do
 
   @expires_from_now [days: 2]
 
-  @spec id_token(t, keyword) :: IDToken.t
+  @spec id_token(t, keyword) :: IDToken.t()
   def id_token(req, from_now \\ @expires_from_now)
 
   def id_token(%{claims: ["email"], email: %{address: address}} = req, from_now) do

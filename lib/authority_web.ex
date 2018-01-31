@@ -28,8 +28,9 @@ defmodule AuthorityWeb do
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/authority_web/templates",
-                        namespace: AuthorityWeb
+      use Phoenix.View,
+        root: "lib/authority_web/templates",
+        namespace: AuthorityWeb
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_flash: 2, view_module: 1]

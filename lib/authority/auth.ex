@@ -6,8 +6,10 @@ defmodule Authority.Auth do
     case Repo.transaction(find_or_create(auth)) do
       {:ok, result} ->
         {:ok, result}
+
       {:error, failed_op, failed_value, changes} ->
         Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
+
       other ->
         IO.inspect(other)
         raise "what?"
@@ -18,10 +20,13 @@ defmodule Authority.Auth do
     case {find_email(auth), find_identity(auth)} do
       {nil, nil} ->
         insert_all(auth)
+
       {email, nil} ->
         insert_identity_related_to(email, auth)
+
       {nil, identity} ->
         insert_email_related_to(identity, auth)
+
       {email, identity} ->
         if email.account_id == identity.account_id do
           update_all(email, identity, auth)
@@ -34,7 +39,7 @@ defmodule Authority.Auth do
   def insert_all(auth) do
     # TODO: support providers that don't provide an email address
 
-    Ecto.Multi.new
+    Ecto.Multi.new()
     |> Ecto.Multi.insert(:account, account_changeset(auth))
     |> Ecto.Multi.run(:email, fn %{account: account} ->
       Repo.insert(email_changeset(auth, account))
@@ -47,7 +52,7 @@ defmodule Authority.Auth do
   def insert_identity_related_to(email, auth) do
     %{account: account} = Repo.preload(email, :account)
 
-    Ecto.Multi.new
+    Ecto.Multi.new()
     |> Ecto.Multi.run(:account, fn _ ->
       update_empty_account_info(account, auth)
     end)
@@ -58,7 +63,7 @@ defmodule Authority.Auth do
   def insert_email_related_to(identity, auth) do
     %{account: account} = Repo.preload(identity, :account)
 
-    Ecto.Multi.new
+    Ecto.Multi.new()
     |> Ecto.Multi.run(:account, fn _ ->
       update_empty_account_info(account, auth)
     end)
@@ -69,7 +74,7 @@ defmodule Authority.Auth do
   def update_all(email, identity, auth) do
     %{account: account} = Repo.preload(identity, :account)
 
-    Ecto.Multi.new
+    Ecto.Multi.new()
     |> Ecto.Multi.run(:account, fn _ ->
       update_empty_account_info(account, auth)
     end)
@@ -83,7 +88,7 @@ defmodule Authority.Auth do
     %{account: old_account} = Repo.preload(email, :account)
     %{account: new_account} = Repo.preload(identity, :account)
 
-    Ecto.Multi.new
+    Ecto.Multi.new()
     |> Ecto.Multi.run(:email, fn _ -> {:ok, email} end)
     |> Ecto.Multi.run(:identity, fn _ ->
       with {:ok, _} <- move_identities_from_account_to_account(new_account.id, old_account.id) do
@@ -115,27 +120,29 @@ defmodule Authority.Auth do
 
     possible = extract_account_params(auth)
 
-    intended = Map.merge(existing, possible, fn _key, existing_value, possible_value ->
-      case {existing_value, possible_value} do
-        {nil, new_value} when not is_nil(new_value) -> new_value
-        _ -> existing_value
-      end
-    end)
+    intended =
+      Map.merge(existing, possible, fn _key, existing_value, possible_value ->
+        case {existing_value, possible_value} do
+          {nil, new_value} when not is_nil(new_value) -> new_value
+          _ -> existing_value
+        end
+      end)
 
     Account.changeset(account, intended)
     |> Repo.update()
   end
 
-  def find_email(%Ueberauth.Auth{} = auth),
-    do: find_email(auth.info.email)
+  def find_email(%Ueberauth.Auth{} = auth), do: find_email(auth.info.email)
 
   def find_email(address) when is_binary(address) do
     address = Email.format(address)
 
-    from(e in Email,
-         where: e.address == ^address,
-         lock: "FOR UPDATE")
-         |> Repo.one()
+    from(
+      e in Email,
+      where: e.address == ^address,
+      lock: "FOR UPDATE"
+    )
+    |> Repo.one()
   end
 
   def email_changeset(auth, account) do
@@ -153,11 +160,13 @@ defmodule Authority.Auth do
     do: find_identity(to_string(provider), to_string(uid))
 
   def find_identity(provider, uid) do
-    from(i in Identity,
-         where: i.provider == ^provider,
-         where: i.uid == ^uid,
-         lock: "FOR UPDATE")
-         |> Repo.one()
+    from(
+      i in Identity,
+      where: i.provider == ^provider,
+      where: i.uid == ^uid,
+      lock: "FOR UPDATE"
+    )
+    |> Repo.one()
   end
 
   def identity_changeset(auth, account) do
@@ -197,4 +206,3 @@ defmodule Authority.Auth do
     }
   end
 end
-

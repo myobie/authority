@@ -1,14 +1,12 @@
 use Mix.Config
 
-config :authority,
-  ecto_repos: [Authority.Repo]
+config :authority, ecto_repos: [Authority.Repo]
 
 config :authority, AuthorityWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "CBFL1okYX6SHw2kP+kLh8YaiC39BdmQ37V0ZwDtXJJAKg6EpgO5qjLMcTyvPSp6q",
   render_errors: [view: AuthorityWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Authority.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Authority.PubSub, adapter: Phoenix.PubSub.PG2]
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
@@ -43,4 +41,4 @@ config :authority, :clients, []
 #     client_secret: "abcxyz",
 #     redirect_uri: "https://example.com/auth/callback"}
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

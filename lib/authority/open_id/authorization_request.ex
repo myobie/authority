@@ -35,12 +35,11 @@ defmodule Authority.OpenID.AuthorizationRequest do
     change(request, %{claimed_at: Timex.now()})
   end
 
-  @spec id_token(t, keyword) :: IDToken.t
+  @spec id_token(t, keyword) :: IDToken.t()
   def id_token(req, from_now \\ @expires_from_now)
 
   def id_token(%{claims: ["email"], email: %{address: address}} = req, from_now) do
     req
-    |> Map.put(:claims, %{})
     |> id_token(from_now)
     |> Map.put(:claims, %{email: address})
   end
@@ -60,9 +59,9 @@ defmodule Authority.OpenID.AuthorizationRequest do
   @spec signed_id_token(t, keyword) :: {:ok, binary}
   def signed_id_token(req, from_now \\ @expires_from_now) do
     {:ok,
-      req
-      |> id_token(from_now)
-      |> IDToken.sign!()}
+     req
+     |> id_token(from_now)
+     |> IDToken.sign!()}
   end
 
   def access_token(req, from_now \\ @expires_from_now) do
@@ -78,8 +77,8 @@ defmodule Authority.OpenID.AuthorizationRequest do
 
   def signed_access_token(req, from_now \\ @expires_from_now) do
     {:ok,
-      req
-      |> access_token(from_now)
-      |> AccessToken.sign!()}
+     req
+     |> access_token(from_now)
+     |> AccessToken.sign!()}
   end
 end

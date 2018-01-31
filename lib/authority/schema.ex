@@ -13,28 +13,30 @@ defmodule Authority.Schema do
 
   defmacro deleted_at do
     quote do
-      field :deleted_at, :utc_datetime
+      field(:deleted_at, :utc_datetime)
     end
   end
 
-  @spec fetch_fields(Changeset.t, list(atom)) :: Keyword.t
+  @spec fetch_fields(Changeset.t(), list(atom)) :: Keyword.t()
   def fetch_fields(changeset, fields), do: fetch_fields([], changeset, fields)
 
-  @spec fetch_fields(Keyword.t, Changeset.t, nonempty_list(atom)) :: Keyword.t
+  @spec fetch_fields(Keyword.t(), Changeset.t(), nonempty_list(atom)) :: Keyword.t()
   defp fetch_fields(results, _changeset, []), do: results
 
   defp fetch_fields(results, changeset, [field | fields]) do
-    value = case Changeset.fetch_field(changeset, field) do
-      :error -> nil
-      {_, v} -> v
-    end
+    value =
+      case Changeset.fetch_field(changeset, field) do
+        :error -> nil
+        {_, v} -> v
+      end
 
     results
     |> Keyword.put(field, value)
     |> fetch_fields(changeset, fields)
   end
 
-  @spec truncate_length(Changeset.t, atom | nonempty_list(atom), non_neg_integer) :: Changeset.t
+  @spec truncate_length(Changeset.t(), atom | nonempty_list(atom), non_neg_integer) ::
+          Changeset.t()
   def truncate_length(changeset, [], _size), do: changeset
 
   def truncate_length(changeset, [field | fields], size) do
@@ -48,7 +50,7 @@ defmodule Authority.Schema do
     |> Changeset.update_change(field, &String.slice(&1, 0, size))
   end
 
-  @spec validate_length(Changeset.t, atom | nonempty_list(atom), Keyword.t) :: Changeset.t
+  @spec validate_length(Changeset.t(), atom | nonempty_list(atom), Keyword.t()) :: Changeset.t()
   def validate_length(changeset, [], _options), do: changeset
 
   def validate_length(changeset, [field | fields], options) do

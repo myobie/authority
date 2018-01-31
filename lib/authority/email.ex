@@ -4,8 +4,8 @@ defmodule Authority.Email do
   @type t :: %__MODULE__{}
 
   schema "emails" do
-    belongs_to :account, Authority.Account
-    field :address, :string
+    belongs_to(:account, Authority.Account)
+    field(:address, :string)
     timestamps()
   end
 
@@ -15,8 +15,8 @@ defmodule Authority.Email do
     |> String.downcase()
   end
 
-  @spec changeset(t, map, [account: Authority.Account.t]) :: Changeset.t
-  def changeset(%__MODULE__{} = email \\ %__MODULE__{}, attrs, [account: account]) do
+  @spec changeset(t, map, account: Authority.Account.t()) :: Changeset.t()
+  def changeset(%__MODULE__{} = email \\ %__MODULE__{}, attrs, account: account) do
     email
     |> cast(attrs, [:address])
     |> update_change(:address, &format/1)

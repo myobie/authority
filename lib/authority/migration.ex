@@ -16,7 +16,7 @@ defmodule Authority.Migration do
 
   defmacro deleted_at do
     quote do
-      add :deleted_at, :utc_datetime
+      add(:deleted_at, :utc_datetime)
     end
   end
 end

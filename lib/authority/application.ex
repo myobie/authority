@@ -11,7 +11,7 @@ defmodule Authority.Application do
       # Start the Ecto repository
       supervisor(Authority.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(AuthorityWeb.Endpoint, []),
+      supervisor(AuthorityWeb.Endpoint, [])
       # Start your own worker by calling: Authority.Worker.start_link(arg1, arg2, arg3)
       # worker(Authority.Worker, [arg1, arg2, arg3]),
     ]

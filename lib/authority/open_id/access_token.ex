@@ -16,11 +16,9 @@ defmodule Authority.OpenID.AccessToken do
     |> Map.from_struct()
   end
 
-  def sign(access_token),
-    do: access_token |> to_map() |> JWT.sign()
+  def sign(access_token), do: access_token |> to_map() |> JWT.sign()
 
-  def sign!(access_token),
-    do: access_token |> to_map() |> JWT.sign!()
+  def sign!(access_token), do: access_token |> to_map() |> JWT.sign!()
 
   def verify(compact_signed_jwt) do
     case JWT.verify(compact_signed_jwt) do
@@ -29,6 +27,5 @@ defmodule Authority.OpenID.AccessToken do
     end
   end
 
-  def verify?(compact_signed_jwt),
-    do: JWT.verify?(compact_signed_jwt)
+  def verify?(compact_signed_jwt), do: JWT.verify?(compact_signed_jwt)
 end

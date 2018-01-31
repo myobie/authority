@@ -23,11 +23,7 @@ defmodule Authority.AuthTest do
   test "can process an Auth struct from scratch" do
     result = Authority.Auth.process(@github_auth)
 
-    assert match?({:ok,
-      %{account: _account,
-        email: _email,
-        identity: _identity}},
-      result)
+    assert match?({:ok, %{account: _account, email: _email, identity: _identity}}, result)
   end
 
   test "can process an Auth struct with existing email" do
@@ -35,14 +31,13 @@ defmodule Authority.AuthTest do
 
     result = Authority.Auth.process(@github_auth)
 
-    assert match?({:ok,
-      %{account: _account,
-        email: %{address: @address},
-        identity: _identity}},
-      result)
+    assert match?(
+             {:ok, %{account: _account, email: %{address: @address}, identity: _identity}},
+             result
+           )
 
     # doesn't create a second account, but keeps the current one
-    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    num_accounts = Repo.one(from(a in Authority.Account, select: count(a.id)))
     assert num_accounts == 1
   end
 
@@ -51,14 +46,10 @@ defmodule Authority.AuthTest do
 
     result = Authority.Auth.process(@github_auth)
 
-    assert match?({:ok,
-      %{account: _account,
-        email: _email,
-        identity: _identity}},
-      result)
+    assert match?({:ok, %{account: _account, email: _email, identity: _identity}}, result)
 
     # doesn't create a second account, but keeps the current one
-    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    num_accounts = Repo.one(from(a in Authority.Account, select: count(a.id)))
     assert num_accounts == 1
   end
 
@@ -69,14 +60,10 @@ defmodule Authority.AuthTest do
 
     result = Authority.Auth.process(@github_auth)
 
-    assert match?({:ok,
-      %{account: _account,
-        email: _email,
-        identity: _identity}},
-      result)
+    assert match?({:ok, %{account: _account, email: _email, identity: _identity}}, result)
 
     # doesn't create a second account, but keeps the current one
-    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    num_accounts = Repo.one(from(a in Authority.Account, select: count(a.id)))
     assert num_accounts == 1
   end
 
@@ -84,19 +71,15 @@ defmodule Authority.AuthTest do
     insert(:email, address: @address)
     insert(:identity, uid: "179", provider: "github")
 
-    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    num_accounts = Repo.one(from(a in Authority.Account, select: count(a.id)))
     assert num_accounts == 2
 
     result = Authority.Auth.process(@github_auth)
 
-    assert match?({:ok,
-      %{account: _account,
-        email: _email,
-        identity: _identity}},
-      result)
+    assert match?({:ok, %{account: _account, email: _email, identity: _identity}}, result)
 
     # merges the two accounts together
-    num_accounts = Repo.one(from a in Authority.Account, select: count(a.id))
+    num_accounts = Repo.one(from(a in Authority.Account, select: count(a.id)))
     assert num_accounts == 1
   end
 end
