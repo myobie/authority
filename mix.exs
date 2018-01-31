@@ -52,7 +52,7 @@ defmodule Authority.Mixfile do
       {:ueberauth_microsoft, "~> 0.3"},
       {:ueberauth_vso, github: "myobie/ueberauth_vso"},
       {:ex_machina, "~> 2.0", only: [:test]},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev]},
       {:distillery, "~> 1.5"},
       {:build_release, github: "myobie/build_release", only: [:dev]}
     ]
@@ -62,7 +62,8 @@ defmodule Authority.Mixfile do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
-      "test": ["ecto.create --quiet", "ecto.migrate", "test"]
+      "test": ["ecto.create --quiet", "ecto.migrate", "test"],
+      "lint": ["compile", "dialyzer"]
     ]
   end
 end
