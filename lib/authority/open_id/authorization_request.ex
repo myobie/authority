@@ -36,15 +36,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
   end
 
   @spec id_token(t, keyword) :: IDToken.t()
-  def id_token(req, from_now \\ @expires_from_now)
-
-  def id_token(%{claims: ["email"], email: %{address: address}} = req, from_now) do
-    req
-    |> id_token(from_now)
-    |> Map.put(:claims, %{email: address})
-  end
-
-  def id_token(req, from_now) do
+  def id_token(req, from_now \\ @expires_from_now) do
     %IDToken{
       iss: "#{AuthorityWeb.Endpoint.url()}/",
       sub: req.account_id,
