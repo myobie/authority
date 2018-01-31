@@ -1,5 +1,5 @@
 defmodule Authority.OpenID.IDToken do
-  alias Authority.OpenID.{JWT}
+  alias Authority.OpenID.JWT
 
   defstruct iss: nil,
     sub: nil,

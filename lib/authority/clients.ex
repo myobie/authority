@@ -7,4 +7,12 @@ defmodule Authority.Clients do
       client -> {:ok, client}
     end
   end
+
+  def secret_match?(client, secret) do
+    if client.secret == secret do
+      :ok
+    else
+      {:error, :missing_client}
+    end
+  end
 end

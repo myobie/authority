@@ -1,8 +1,6 @@
 defmodule Authority.Account do
   use Authority.Schema
 
-  @type t :: %__MODULE__{}
-
   schema "accounts" do
     field :name, :string
     field :preferred_username, :string
@@ -17,6 +15,8 @@ defmodule Authority.Account do
 
     timestamps()
   end
+
+  @type t :: %__MODULE__{}
 
   @spec changeset(map) :: Changeset.t
   @spec changeset(t, map) :: Changeset.t

@@ -10,11 +10,13 @@ defmodule AuthorityWeb.AuthController do
 
   def authorize(conn, %{"client_id" => client_id,
                         "redirect_uri" => redirect_uri,
-                        "provider" => provider} = params) do
+                        "response_type" => response_type,
+                        "provider" => provider} = params) when response_type in ["id_token", "code"] do
     with {:ok, _client} <- Clients.fetch(client_id, redirect_uri) do
       conn
       |> put_session("client_id", client_id)
       |> put_session("redirect_uri", redirect_uri)
+      |> put_session("response_type", response_type)
       |> put_session("scope", params["scope"])
       |> put_session("state", params["state"])
       |> put_session("nonce", params["nonce"])
@@ -24,8 +26,8 @@ defmodule AuthorityWeb.AuthController do
 
   def authorize(conn, _params) do
     conn
-    |> put_status(404)
-    |> json(%{error: "Request type not supported yet. Authority only supports response_type=id_token and scope=openid profile (Implicit flow with simple scope) right now."})
+    |> put_status(400)
+    |> json(%{error: "Request not supported"})
   end
 
   def request(_conn, _params) do
@@ -48,28 +50,39 @@ defmodule AuthorityWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    with {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth),
-      {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
-      {:ok, client} <- Clients.fetch(client_id, redirect_uri)
-    do
-      req = %OpenID.AuthorizationRequest{
-        account: account,
-        email: email,
-        identity: identity,
-        client: client,
-        nonce: get_session(conn, "nonce"),
-        claims: get_claims(get_session(conn, "scope"))
-      }
+    with {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
+         {:ok, client} <- Clients.fetch(client_id, redirect_uri),
+         {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth) do
+      case get_session(conn, "response_type") do
+        nil ->
+          conn
+          |> put_status(400)
+          |> json(%{error: "Request not supported"})
+        "id_token" ->
+          implicit_callback(conn, %OpenID.ImplicitAuthorizationRequest{
+            account: account,
+            email: email,
+            identity: identity,
+            client: client,
+            nonce: get_session(conn, "nonce"),
+            claims: get_claims(get_session(conn, "scope"))
+          })
+        "code" ->
+          code_callback(conn, account, client)
+      end
+    end
+  end
 
-      jwt = OpenID.signed_id_token(req)
-      state = get_session(conn, "state")
-      query = URI.encode_query(%{"id_token" => jwt, "state" => state})
+  defp implicit_callback(conn, req) do
+    with {:ok, uri} <- OpenID.implicit_callback_uri(req, get_session(conn, "state")) do
+      conn
+      |> configure_session(drop: true)
+      |> redirect(external: uri)
+    end
+  end
 
-      uri = client.redirect_uri
-            |> URI.parse()
-            |> Map.put(:query, query)
-            |> to_string()
-
+  defp code_callback(conn, account, client) do
+    with {:ok, uri} <- OpenID.code_callback_uri(account, client, get_session(conn, "state")) do
       conn
       |> configure_session(drop: true)
       |> redirect(external: uri)
