@@ -12,13 +12,12 @@ defmodule AuthorityWeb.AuthController do
   #                  "family_name", "given_name", "identities", "name",
   #                  "nickname", "offline_access", "openid", "phone",
   #                  "picture", "profile"]
-  @allowed_scopes MapSet.new(["email", "identities", "offline_access",
-                              "openid", "profile"])
+  @allowed_scopes ["email", "identities", "offline_access", "openid", "profile"]
 
   # TODO: actually support all of these types
   # @allowed_response_types ["code", "code id_token", "code token", "code id_token token",
   #                          "id_token", "token", "id_token token"]
-  @allowed_response_types MapSet.new(["code", "id_token"])
+  @allowed_response_types ["code", "id_token"]
 
   def authorize(
         conn,
@@ -33,7 +32,7 @@ defmodule AuthorityWeb.AuthController do
     with {:ok, client} <- Client.fetch(client_id, redirect_uri),
          {:ok, scopes} <- validate_scopes(scope),
          :ok <- validate_provider(client, provider),
-         {:ok, response_type} <- validate_response_type(response_type, client: client) do
+         {:ok, response_type} <- validate_response_type(client, response_type) do
       conn
       |> put_session("client_id", client_id)
       |> put_session("redirect_uri", redirect_uri)
@@ -51,20 +50,22 @@ defmodule AuthorityWeb.AuthController do
     |> json(%{error: "Request not supported"})
   end
 
+  @spec validate_scopes(String.t()) :: {:ok, list(String.t())} | {:error, :invalid_scope}
   defp validate_scopes(scope) do
     scopes =
       scope
       |> String.split(" ", trim: true)
       |> MapSet.new()
 
-    if MapSet.member?(scopes, "openid") && MapSet.subset?(scopes, @allowed_scopes) do
+    if MapSet.member?(scopes, "openid") && MapSet.subset?(scopes, MapSet.new(@allowed_scopes)) do
       {:ok, MapSet.to_list(scopes)}
     else
       {:error, :invalid_scope}
     end
   end
 
-  defp validate_response_type(response_type, client: client) do
+  @spec validate_response_type(Client.t(), String.t()) :: {:ok, String.t()} | {:error, :invalid_response_type}
+  defp validate_response_type(client, response_type) do
     sorted_response_type =
       response_type
       |> String.split(" ", trim: true)
@@ -78,6 +79,7 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
+  @spec validate_provider(Client.t(), String.t() | atom) :: :ok | {:error, :invalid_provider}
   defp validate_provider(client, provider) do
     if Client.allowed_provider?(client, provider) do
       :ok

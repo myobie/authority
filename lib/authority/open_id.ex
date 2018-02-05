@@ -6,7 +6,8 @@ defmodule Authority.OpenID do
   alias Authority.OpenID.{AuthorizationRequest, ImplicitAuthorizationRequest}
   import Ecto.Query
 
-  def implicit_callback_uri(req, state) do
+  @spec implicit_callback_uri(ImplicitAuthorizationRequest.t(), String.t()) :: {:ok, String.t()}
+  def implicit_callback_uri(%ImplicitAuthorizationRequest{} = req, state) do
     jwt = ImplicitAuthorizationRequest.signed_id_token(req)
     query = URI.encode_query(%{"id_token" => jwt, "state" => state})
 
