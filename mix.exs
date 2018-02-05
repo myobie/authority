@@ -51,6 +51,7 @@ defmodule Authority.Mixfile do
       {:ueberauth_github, "~> 0.4"},
       {:ueberauth_microsoft, "~> 0.3"},
       {:ueberauth_vso, github: "myobie/ueberauth_vso"},
+      {:shorter_maps, "~> 2.2"},
       {:ex_machina, "~> 2.0", only: [:test]},
       {:dialyxir, "~> 0.5", only: [:dev]},
       {:distillery, "~> 1.5"},

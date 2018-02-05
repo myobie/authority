@@ -11,7 +11,6 @@ defmodule Authority.Client.Config do
               |> Map.get(:allowed_response_types, [])
               |> Enum.map(&to_string/1)
 
-
             Authority.Client
             |> struct(info)
             |> Map.put(:allowed_providers, providers)

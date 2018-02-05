@@ -1,5 +1,9 @@
 defmodule Authority.Client do
-  defstruct client_id: nil, client_secret: nil, redirect_uri: nil, allowed_providers: [], allowed_response_types: []
+  defstruct client_id: nil,
+            client_secret: nil,
+            redirect_uri: nil,
+            allowed_providers: [],
+            allowed_response_types: []
 
   @type t :: %__MODULE__{}
 

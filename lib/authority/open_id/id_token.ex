@@ -45,8 +45,12 @@ defimpl Collectable, for: Authority.OpenID.IDToken do
      fn
        jwt, {:cont, {k, v}} ->
          cond do
-           Map.has_key?(@valid_keys, k) -> Map.put(jwt, Map.get(@valid_keys, k), v)
-           true -> %{jwt | claims: Map.put(jwt.claims, k, v)}
+           Map.has_key?(@valid_keys, k) ->
+             Map.put(jwt, Map.get(@valid_keys, k), v)
+
+           # invalid keys go into claims
+           true ->
+             %{jwt | claims: Map.put(jwt.claims, k, v)}
          end
 
        jwt, :done ->

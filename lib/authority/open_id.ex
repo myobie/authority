@@ -115,7 +115,10 @@ defmodule Authority.OpenID do
         preload: [:account]
       )
 
-    Repo.one(query)
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      req -> {:ok, req}
+    end
   end
 
   # refresh tokens are good for 30 days, can only be used once, and can only be used if the original code was claimed
@@ -131,7 +134,10 @@ defmodule Authority.OpenID do
         preload: [:account]
       )
 
-    Repo.one(query)
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      req -> {:ok, req}
+    end
   end
 
   defp claim_authorization_request(request) do

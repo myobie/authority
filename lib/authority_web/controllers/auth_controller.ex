@@ -64,7 +64,8 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
-  @spec validate_response_type(Client.t(), String.t()) :: {:ok, String.t()} | {:error, :invalid_response_type}
+  @spec validate_response_type(Client.t(), String.t()) ::
+          {:ok, String.t()} | {:error, :invalid_response_type}
   defp validate_response_type(client, response_type) do
     sorted_response_type =
       response_type
@@ -72,7 +73,8 @@ defmodule AuthorityWeb.AuthController do
       |> Enum.sort()
       |> Enum.join(" ")
 
-    if Enum.member?(@allowed_response_types, sorted_response_type) && Client.allowed_response_type?(client, sorted_response_type) do
+    if Enum.member?(@allowed_response_types, sorted_response_type) &&
+         Client.allowed_response_type?(client, sorted_response_type) do
       {:ok, sorted_response_type}
     else
       {:error, :invalid_response_type}

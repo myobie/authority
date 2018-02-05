@@ -29,3 +29,32 @@ defmodule Authority.OpenID.AccessToken do
 
   def verify?(compact_signed_jwt), do: JWT.verify?(compact_signed_jwt)
 end
+
+defimpl Collectable, for: Authority.OpenID.AccessToken do
+  @valid_keys %Authority.OpenID.AccessToken{}
+              |> Map.from_struct()
+              |> Map.keys()
+              |> List.delete(:__struct__)
+              |> Enum.into(Map.new(), fn v -> {to_string(v), v} end)
+
+  def into(original) do
+    {original,
+     fn
+       jwt, {:cont, {k, v}} ->
+         cond do
+           Map.has_key?(@valid_keys, k) ->
+             Map.put(jwt, Map.get(@valid_keys, k), v)
+
+           # ignore invalid keys
+           true ->
+             jwt
+         end
+
+       jwt, :done ->
+         jwt
+
+       _, :halt ->
+         :ok
+     end}
+  end
+end
