@@ -2,7 +2,7 @@ defmodule Authority.OpenID do
   @jwk Application.get_env(:authority, :jwk) |> JOSE.JWK.from()
   def jwk, do: @jwk
 
-  alias Authority.{Clients, Repo}
+  alias Authority.{Client, Repo}
   alias Authority.OpenID.{AuthorizationRequest, ImplicitAuthorizationRequest}
   import Ecto.Query
 
@@ -39,7 +39,7 @@ defmodule Authority.OpenID do
   end
 
   defp refresh_authorization_request(old_req) do
-    with {:ok, client} <- Clients.fetch(old_req.client_id),
+    with {:ok, client} <- Client.fetch(old_req.client_id),
          old_req = Repo.preload(old_req, :account),
          {:ok, new_req} <- insert_authorization_request(old_req.account, client),
          {:ok, new_req} <- claim_authorization_request(new_req),
@@ -62,8 +62,8 @@ defmodule Authority.OpenID do
   def token_response(:code, code, client_id, client_secret, redirect_uri) do
     from_now = [days: 2]
 
-    with {:ok, client} <- Clients.fetch(client_id, redirect_uri),
-         :ok <- Clients.secret_match?(client, client_secret),
+    with {:ok, client} <- Client.fetch(client_id, redirect_uri),
+         :ok <- Client.secret_match?(client, client_secret),
          {:ok, req} <- fetch_authorization_request_by_code_and_client_id(code, client_id),
          {:ok, req} <- claim_authorization_request(req),
          {:ok, id_token} <- AuthorizationRequest.signed_id_token(req, from_now),
@@ -82,8 +82,8 @@ defmodule Authority.OpenID do
   def token_response(:refresh, refresh_token, client_id, client_secret) do
     from_now = [days: 2]
 
-    with {:ok, client} <- Clients.fetch(client_id),
-         :ok <- Clients.secret_match?(client, client_secret),
+    with {:ok, client} <- Client.fetch(client_id),
+         :ok <- Client.secret_match?(client, client_secret),
          {:ok, old_req} <-
            fetch_authorization_request_by_refresh_token_and_client_id(refresh_token, client_id),
          {:ok, new_req} <- refresh_authorization_request(old_req),

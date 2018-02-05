@@ -1,12 +1,24 @@
 defmodule AuthorityWeb.AuthController do
-  require Logger
-
   use AuthorityWeb, :controller
   plug(Ueberauth)
 
-  alias Authority.{Auth, Clients, OpenID}
+  alias Authority.{Auth, Client, OpenID}
+  require Logger
 
   action_fallback(AuthorityWeb.FallbackController)
+
+  # TODO: actually support all of these scopes
+  # @allowed_scopes ["address", "created_at", "email", "email_verified",
+  #                  "family_name", "given_name", "identities", "name",
+  #                  "nickname", "offline_access", "openid", "phone",
+  #                  "picture", "profile"]
+  @allowed_scopes MapSet.new(["email", "identities", "offline_access",
+                              "openid", "profile"])
+
+  # TODO: actually support all of these types
+  # @allowed_response_types ["code", "code id_token", "code token", "code id_token token",
+  #                          "id_token", "token", "id_token token"]
+  @allowed_response_types MapSet.new(["code", "id_token"])
 
   def authorize(
         conn,
@@ -14,17 +26,19 @@ defmodule AuthorityWeb.AuthController do
           "client_id" => client_id,
           "redirect_uri" => redirect_uri,
           "response_type" => response_type,
-          "provider" => provider
+          "provider" => provider,
+          "scope" => scope
         } = params
-      )
-      when response_type in ["id_token", "code"] do
-    with {:ok, _client} <- Clients.fetch(client_id, redirect_uri) do
-      # TODO: validate the provider and allow clients to limit the providers they want to use
+      ) do
+    with {:ok, client} <- Client.fetch(client_id, redirect_uri),
+         {:ok, scopes} <- validate_scopes(scope),
+         :ok <- validate_provider(client, provider),
+         {:ok, response_type} <- validate_response_type(response_type, client: client) do
       conn
       |> put_session("client_id", client_id)
       |> put_session("redirect_uri", redirect_uri)
       |> put_session("response_type", response_type)
-      |> put_session("scope", params["scope"])
+      |> put_session("scopes", scopes)
       |> put_session("state", params["state"])
       |> put_session("nonce", params["nonce"])
       |> redirect(to: "/auth/#{provider}")
@@ -35,6 +49,41 @@ defmodule AuthorityWeb.AuthController do
     conn
     |> put_status(400)
     |> json(%{error: "Request not supported"})
+  end
+
+  defp validate_scopes(scope) do
+    scopes =
+      scope
+      |> String.split(" ", trim: true)
+      |> MapSet.new()
+
+    if MapSet.member?(scopes, "openid") && MapSet.subset?(scopes, @allowed_scopes) do
+      {:ok, MapSet.to_list(scopes)}
+    else
+      {:error, :invalid_scope}
+    end
+  end
+
+  defp validate_response_type(response_type, client: client) do
+    sorted_response_type =
+      response_type
+      |> String.split(" ", trim: true)
+      |> Enum.sort()
+      |> Enum.join(" ")
+
+    if Enum.member?(@allowed_response_types, sorted_response_type) && Client.allowed_response_type?(client, sorted_response_type) do
+      {:ok, sorted_response_type}
+    else
+      {:error, :invalid_response_type}
+    end
+  end
+
+  defp validate_provider(client, provider) do
+    if Client.allowed_provider?(client, provider) do
+      :ok
+    else
+      {:error, :invalid_provider}
+    end
   end
 
   def request(_conn, _params) do
@@ -58,7 +107,7 @@ defmodule AuthorityWeb.AuthController do
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
     with {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
-         {:ok, client} <- Clients.fetch(client_id, redirect_uri),
+         {:ok, client} <- Client.fetch(client_id, redirect_uri),
          {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth) do
       case get_session(conn, "response_type") do
         nil ->
@@ -73,7 +122,7 @@ defmodule AuthorityWeb.AuthController do
             identity: identity,
             client: client,
             nonce: get_session(conn, "nonce"),
-            claims: get_claims(get_session(conn, "scope"))
+            claims: get_claims(get_session(conn, "scopes"))
           })
 
         "code" ->
@@ -107,8 +156,8 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
-  defp get_claims(scope) do
-    if String.contains?(scope, "email") do
+  defp get_claims(scopes) do
+    if Enum.member?(scopes, "email") do
       ["email"]
     else
       []
