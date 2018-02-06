@@ -1,5 +1,5 @@
 defmodule Authority.OpenID.AccessToken do
-  alias Authority.OpenID.JWT
+  use Authority.OpenID.JWT
 
   defstruct iss: nil,
             aud: nil,
@@ -16,18 +16,18 @@ defmodule Authority.OpenID.AccessToken do
     |> Map.from_struct()
   end
 
-  def sign(access_token), do: access_token |> to_map() |> JWT.sign()
+  def sign(access_token), do: access_token |> to_map() |> Helpers.sign()
 
-  def sign!(access_token), do: access_token |> to_map() |> JWT.sign!()
+  def sign!(access_token), do: access_token |> to_map() |> Helpers.sign!()
 
   def verify(compact_signed_jwt) do
-    case JWT.verify(compact_signed_jwt) do
-      {true, jwt} -> jwt |> Enum.into(%__MODULE__{})
+    case Helpers.verify(compact_signed_jwt) do
+      {true, jwt} -> {true, Enum.into(jwt, %__MODULE__{})}
       other -> other
     end
   end
 
-  def verify?(compact_signed_jwt), do: JWT.verify?(compact_signed_jwt)
+  def verify?(compact_signed_jwt), do: Helpers.verify?(compact_signed_jwt)
 end
 
 defimpl Collectable, for: Authority.OpenID.AccessToken do

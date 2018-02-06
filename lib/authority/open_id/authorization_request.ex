@@ -56,6 +56,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
      |> IDToken.sign!()}
   end
 
+  @spec access_token(t, keyword) :: AccessToken.t()
   def access_token(req, from_now \\ @expires_from_now) do
     %AccessToken{
       iss: "#{AuthorityWeb.Endpoint.url()}/",
@@ -67,6 +68,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     }
   end
 
+  @spec signed_access_token(t, keyword) :: {:ok, binary}
   def signed_access_token(req, from_now \\ @expires_from_now) do
     {:ok,
      req

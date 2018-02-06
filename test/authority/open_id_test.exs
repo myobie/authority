@@ -80,7 +80,7 @@ defmodule Authority.OpenIDTest do
       )
 
     assert IDToken.verify?(resp.id_token)
-    assert JWT.verify?(resp.access_token)
+    assert JWT.Helpers.verify?(resp.access_token)
   end
 
   test "token response for a code claims the authorization request", ~M{client, account} do
@@ -127,7 +127,7 @@ defmodule Authority.OpenIDTest do
       OpenID.token_response(:refresh, refresh_token, client.client_id, client.client_secret)
 
     assert IDToken.verify?(resp.id_token)
-    assert JWT.verify?(resp.access_token)
+    assert JWT.Helpers.verify?(resp.access_token)
   end
 
   test "token response for a refresh token deletes the old authorization request",
@@ -169,7 +169,7 @@ defmodule Authority.OpenIDTest do
     {:ok, resp} =
       OpenID.token_response(:refresh, refresh_token, client.client_id, client.client_secret)
 
-    access_token = AccessToken.verify(resp.access_token)
+    {true, access_token} = AccessToken.verify(resp.access_token)
     # req is the id of the request that was created for it
     req = Repo.get(AuthorizationRequest, access_token.req)
 

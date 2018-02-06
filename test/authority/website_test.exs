@@ -1,13 +1,14 @@
 defmodule Authority.WebsiteTest do
+  import ShorterMaps
   use Authority.DataCase
   alias Authority.Website
 
   setup do
     identity = insert(:identity)
-    {:ok, %{identity: identity}}
+    {:ok, ~M{identity}}
   end
 
-  test "valid website", %{identity: identity} do
+  test "valid website", ~M{identity} do
     changeset =
       params_for(:website)
       |> Website.changeset(identity: identity)

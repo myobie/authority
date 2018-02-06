@@ -32,4 +32,20 @@ defmodule Authority.Factory do
       url: "http://example.com"
     }
   end
+
+  def authorization_request_factory do
+    %Authority.OpenID.AuthorizationRequest{
+      client_id: "test",
+      code: "abc",
+      nonce: "xyz",
+      refresh_token: "abcdefg",
+      account: build(:account)
+    }
+  end
+
+  def claimed_authorization_request_factory do
+    build(:authorization_request, %{
+      claimed_at: Timex.now()
+    })
+  end
 end
