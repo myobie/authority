@@ -1,6 +1,9 @@
 defmodule AuthorityWeb.AuthController do
+  import ShorterMaps
   use AuthorityWeb, :controller
-  plug(Ueberauth)
+
+  # NOTE: To be able to have a single /authorize we are not using the Ueberauth plug directly
+  @opts Ueberauth.init(base_path: "/v1/authorize")
 
   alias Authority.{Auth, Client, OpenID}
   require Logger
@@ -19,38 +22,95 @@ defmodule AuthorityWeb.AuthController do
   #                          "id_token", "token", "id_token token"]
   @allowed_response_types ["code", "id_token"]
 
-  def authorize(
-        conn,
-        %{
-          "client_id" => client_id,
-          "redirect_uri" => redirect_uri,
-          "response_type" => response_type,
-          "provider" => provider,
-          "scope" => scope
-        } = params
-      ) do
-    with {:ok, client} <- Client.fetch(client_id, redirect_uri),
-         {:ok, scopes} <- validate_scopes(scope),
+  # we've found the client, let's go
+  def authorize(%{assigns: ~M{client}} = conn, params) do
+    state = params["state"]
+    provider = params["provider"]
+
+    with :ok <- validate_redirect_uri(client, params["redirect_uri"]),
+         {:ok, scopes} <- validate_scopes(params["scope"]),
          :ok <- validate_provider(client, provider),
-         {:ok, response_type} <- validate_response_type(client, response_type) do
+         {:ok, response_type} <- validate_response_type(client, params["response_type"]) do
       conn
-      |> put_session("client_id", client_id)
-      |> put_session("redirect_uri", redirect_uri)
+      |> assign(:state, state)
+      |> assign(:provider, provider)
+      |> put_session("client_id", client.client_id)
       |> put_session("response_type", response_type)
       |> put_session("scopes", scopes)
-      |> put_session("state", params["state"])
+      |> put_session("state", state)
       |> put_session("nonce", params["nonce"])
-      |> redirect(to: "/auth/#{provider}")
+      |> to_provider()
+    else
+      {:error, error} ->
+        uri =
+          client.redirect_uri
+          |> URI.parse()
+          |> Map.put(:query, URI.encode_query(~M{error, state}))
+          |> to_string()
+
+        redirect(conn, external: uri)
     end
   end
 
+  # we have the right params, let's find the client
+  def authorize(conn, ~m{client_id} = params) do
+    with {:ok, client} <- Client.fetch(client_id) do
+      conn
+      |> assign(:client, client)
+      |> authorize(params)
+    else
+      {:error, :missing_client} ->
+        conn
+        |> put_status(400)
+        |> text("Unsupported request")
+    end
+  end
+
+  # no client and no params to find one :(
   def authorize(conn, _params) do
     conn
     |> put_status(400)
-    |> json(%{error: "Request not supported"})
+    |> text("Unsupported authorize request")
   end
 
-  @spec validate_scopes(String.t()) :: {:ok, list(String.t())} | {:error, :invalid_scope}
+  defp to_provider(%{assigns: %{provider: nil}} = conn) do
+    conn
+    |> put_status(500)
+    |> text("TODO: Eventually this will be a sign in page with buttons for providers")
+  end
+
+  defp to_provider(%{assigns: ~M{provider}} = conn) do
+    conn
+    |> Map.put(:request_path, "/v1/authorize/#{provider}")
+    |> Ueberauth.call(@opts)
+    |> finish_redirect_to_provider()
+  end
+
+  # halted means Ueberauth decided to redirect somewhere
+  defp finish_redirect_to_provider(%{halted: true} = conn), do: conn
+
+  # else, let's go back to the client and let them know
+  defp finish_redirect_to_provider(%{assigns: ~M{client, state}} = conn) do
+    uri =
+      client.redirect_uri
+      |> URI.parse()
+      |> Map.put(:query, URI.encode_query(%{error: :invalid_provider, state: state}))
+      |> to_string()
+
+    redirect(conn, external: uri)
+  end
+
+  defp validate_redirect_uri(_client, nil) do
+    {:error, :redirect_uri_is_a_required_param}
+  end
+
+  defp validate_redirect_uri(client, redirect_uri) do
+    Client.redirect_uri_match?(client, redirect_uri)
+  end
+
+  @spec validate_scopes(String.t() | nil) :: {:ok, list(String.t())} | {:error, :invalid_scope | :scope_is_a_required_param}
+  defp validate_scopes(nil), do: {:error, :scope_is_a_required_param}
+
   defp validate_scopes(scope) do
     scopes =
       scope
@@ -65,7 +125,11 @@ defmodule AuthorityWeb.AuthController do
   end
 
   @spec validate_response_type(Client.t(), String.t()) ::
-          {:ok, String.t()} | {:error, :invalid_response_type}
+          {:ok, String.t()} | {:error, :invalid_response_type | :response_type_is_a_required_param}
+  defp validate_response_type(_client, nil) do
+    {:error, :response_type_is_a_required_param}
+  end
+
   defp validate_response_type(client, response_type) do
     sorted_response_type =
       response_type
@@ -82,16 +146,14 @@ defmodule AuthorityWeb.AuthController do
   end
 
   @spec validate_provider(Client.t(), String.t() | atom) :: :ok | {:error, :invalid_provider}
+  defp validate_provider(_client, nil), do: :ok
+
   defp validate_provider(client, provider) do
     if Client.allowed_provider?(client, provider) do
       :ok
     else
       {:error, :invalid_provider}
     end
-  end
-
-  def request(_conn, _params) do
-    raise "What do I do here?"
   end
 
   def delete(conn, _params) do
@@ -110,8 +172,8 @@ defmodule AuthorityWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-    with {:ok, client_id, redirect_uri} <- get_client_id_and_redirect_uri_from_session(conn),
-         {:ok, client} <- Client.fetch(client_id, redirect_uri),
+    with {:ok, client_id} <- get_client_id_from_session(conn),
+         {:ok, client} <- Client.fetch(client_id),
          {:ok, %{account: account, email: email, identity: identity}} <- Auth.process(auth) do
       case get_session(conn, "response_type") do
         nil ->
@@ -135,6 +197,20 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
+  def callback(%{assigns: %{attempted_ueberauth_call?: true}} = conn, _params) do
+    # TODO: if we know the client, then redirect back to them
+    conn
+    |> put_status(400)
+    |> json(%{error: "Request not supported"})
+  end
+
+  def callback(conn, params) do
+    conn
+    |> assign(:attempted_ueberauth_call?, true)
+    |> Ueberauth.call(@opts)
+    |> callback(params)
+  end
+
   defp implicit_callback(conn, req) do
     with {:ok, uri} <- OpenID.implicit_callback_uri(req, get_session(conn, "state")) do
       conn
@@ -151,10 +227,9 @@ defmodule AuthorityWeb.AuthController do
     end
   end
 
-  defp get_client_id_and_redirect_uri_from_session(conn) do
-    with client_id when not is_nil(client_id) <- get_session(conn, "client_id"),
-         redirect_uri when not is_nil(redirect_uri) <- get_session(conn, "redirect_uri") do
-      {:ok, client_id, redirect_uri}
+  defp get_client_id_from_session(conn) do
+    with client_id when not is_nil(client_id) <- get_session(conn, "client_id") do
+      {:ok, client_id}
     else
       _ -> {:error, :forgotten_original_client_destination}
     end

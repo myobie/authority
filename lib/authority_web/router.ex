@@ -9,24 +9,22 @@ defmodule AuthorityWeb.Router do
     plug(:put_secure_browser_headers)
   end
 
-  pipeline :api do
-    plug(:accepts, ["json"])
-  end
-
-  scope "/auth", AuthorityWeb do
-    pipe_through(:browser)
-
-    get("/:provider", AuthController, :request)
-    get("/:provider/callback", AuthController, :callback)
-    post("/:provider/callback", AuthController, :callback)
-    delete("/logout", AuthController, :delete)
-  end
-
   scope "/", AuthorityWeb do
     pipe_through(:browser)
 
     get("/", PageController, :index)
-    get("/authorize", AuthController, :authorize)
+  end
+
+  scope "/v1", AuthorityWeb do
+    pipe_through(:browser)
+
+    get("/authorize", AuthController, :authorize, as: :authorize)
+    post("/authorize", AuthController, :authorize)
+
+    get("/authorize/:provider/callback", AuthController, :callback, as: :authorization_callback)
+    post("/authorize/:provider/callback", AuthController, :callback)
+
     post("/token", AuthController, :token)
+    delete("/logout", AuthController, :delete, as: :logout)
   end
 end

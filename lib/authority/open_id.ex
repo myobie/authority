@@ -63,8 +63,9 @@ defmodule Authority.OpenID do
   def token_response(:code, code, client_id, client_secret, redirect_uri) do
     from_now = [days: 2]
 
-    with {:ok, client} <- Client.fetch(client_id, redirect_uri),
+    with {:ok, client} <- Client.fetch(client_id),
          :ok <- Client.secret_match?(client, client_secret),
+         :ok <- Client.redirect_uri_match?(client, redirect_uri),
          {:ok, req} <- fetch_authorization_request_by_code_and_client_id(code, client_id),
          {:ok, req} <- claim_authorization_request(req),
          {:ok, id_token} <- AuthorizationRequest.signed_id_token(req, from_now),

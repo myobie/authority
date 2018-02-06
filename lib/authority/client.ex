@@ -18,15 +18,6 @@ defmodule Authority.Client do
     end
   end
 
-  @doc "Fetch a configured client by both client_id and redirect_uri"
-  @spec fetch(String.t(), String.t()) :: {:ok, t} | {:error, :missing_client}
-  def fetch(client_id, redirect_uri) do
-    case Enum.find(config(), &(&1.client_id == client_id && &1.redirect_uri == redirect_uri)) do
-      nil -> {:error, :missing_client}
-      client -> {:ok, client}
-    end
-  end
-
   @doc ~S"""
   Compares a secret to a certain client's internal secret.
 
@@ -44,6 +35,26 @@ defmodule Authority.Client do
       :ok
     else
       {:error, :missing_client}
+    end
+  end
+
+  @doc ~S"""
+  Compares a redirect_uri to a certain client's redirect_uri.
+
+  ## Examples
+
+      iex> Client.redirect_uri_match?(%Client{redirect_uri: "abc"}, "abc")
+      :ok
+
+      iex> Client.redirect_uri_match?(%Client{redirect_uri: "xyz"}, "abc")
+      {:error, :invalid_redirect_uri}
+  """
+  @spec redirect_uri_match?(t, String.t()) :: :ok | {:error, :invalid_redirect_uri}
+  def redirect_uri_match?(client, redirect_uri) do
+    if client.redirect_uri == redirect_uri do
+      :ok
+    else
+      {:error, :invalid_redirect_uri}
     end
   end
 
