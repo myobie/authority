@@ -82,6 +82,7 @@ defmodule AuthorityWeb.AuthController do
   defp to_provider(%{assigns: ~M{provider}} = conn) do
     conn
     |> Map.put(:request_path, "/v1/authorize/#{provider}")
+    |> Map.put(:params, %{})
     |> Ueberauth.call(@opts)
     |> finish_redirect_to_provider()
   end
