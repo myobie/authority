@@ -17,7 +17,7 @@ WORKDIR /app
 RUN mkdir config
 
 COPY mix.exs mix.lock /app/
-COPY config/config.exs config/prod.exs config/prod.secret.exs config/dev.secret.private config/dev.secret.public /app/config/
+COPY config/config.exs config/prod.exs config/prod.secret.exs /app/config/
 
 # Must get deps before npm install becuase some javascript is inside some of
 # the elixir packages
