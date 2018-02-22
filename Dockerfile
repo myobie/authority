@@ -1,10 +1,10 @@
-FROM elixir:1.5.2
+FROM elixir:1.6.1
 
 MAINTAINER Nathan Herald
 
 CMD /bin/bash
 
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_9.x | bash - && \
     apt-get install nodejs -y
 
 ENV MIX_ENV=prod
