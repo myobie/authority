@@ -4,7 +4,7 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequest do
             identity: nil,
             client: nil,
             nonce: nil,
-            now: Timex.now(),
+            now: nil,
             claims: []
 
   alias Authority.OpenID.IDToken

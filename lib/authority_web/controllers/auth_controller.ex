@@ -189,6 +189,7 @@ defmodule AuthorityWeb.AuthController do
             identity: identity,
             client: client,
             nonce: get_session(conn, "nonce"),
+            now: Timex.now(),
             claims: get_claims(get_session(conn, "scopes"))
           })
 
