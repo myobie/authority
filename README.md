@@ -26,6 +26,12 @@ To start your Phoenix server:
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
+## How do I generate a keypair?
+
+```sh
+$ mix keypair
+```
+
 # TODO:
 
 - [x] Get `/authorize` to do the most basic happy path implicit flow as a proof of concept
