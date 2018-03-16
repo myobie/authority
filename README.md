@@ -29,11 +29,14 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 # TODO:
 
 - [x] Get `/authorize` to do the most basic happy path implicit flow as a proof of concept
-- [ ] Validate the `provider` param in `/authorize`
-- [ ] Fix merge accounts test
-- [ ] Document how to create public/private key pairs (JWKs)
-- [ ] Make it possible for clients to limit their allowed providers
+- [x] Validate the `provider` param in `/authorize`
+- [x] Fix merge accounts test
+- [x] Document how to create public/private key pairs (JWKs)
+- [x] Make it possible for clients to limit their allowed providers
+- [ ] Authorization code flow
 - [ ] Add a few more providers for testing
+- [ ] User info API
+- [ ] Identities API
 - [ ] Start an `authority_client` library for use in Plug/Phoenix applications
 - [ ] Start an `ueberauth` strategy
 - [ ] What to do with a provider that doesn't provide an email address?
