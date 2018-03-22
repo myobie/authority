@@ -4,24 +4,29 @@ defmodule Authority.Mixfile do
   def project do
     [
       app: :authority,
-      version: version(),
-      elixir: "~> 1.5",
+      version: "0.1.0",
+      elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
-      dialyzer: [plt_add_deps: :transitive],
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      dialyzer: [
+        plt_add_deps: :transitive,
+        flags: [
+          :unmatched_returns,
+          :error_handling,
+          :race_conditions,
+          :underspecs,
+          :no_behaviours,
+          :no_fail_call,
+          :no_missing_calls,
+          :no_return,
+          :no_undefined_callbacks,
+          :no_unused
+        ]
+      ]
     ]
-  end
-
-  @default_vsn "0.0.0"
-
-  def version do
-    case File.read("./VERSION") do
-      {:ok, vsn} -> vsn |> String.trim()
-      _ -> @default_vsn
-    end
   end
 
   def application do
