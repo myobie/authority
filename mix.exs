@@ -52,9 +52,8 @@ defmodule Authority.Mixfile do
       {:ueberauth_vso, github: "myobie/ueberauth_vso"},
       {:shorter_maps, "~> 2.2"},
       {:ex_machina, "~> 2.0", only: [:test]},
-      {:dialyxir, "~> 0.5", only: [:dev]},
-      {:distillery, "~> 1.5"},
-      {:build_release, github: "myobie/build_release", only: [:dev]}
+      {:dialyxir, "~> 0.5", only: [:dev, :test]},
+      {:mix_test_watch, "~> 0.5", only: [:dev], runtime: false}
     ]
   end
 

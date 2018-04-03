@@ -28,6 +28,8 @@ config :logger, :console, format: "[$level] $message\n"
 
 config :phoenix, :stacktrace_depth, 20
 
+config :mix_test_watch, clear: true
+
 config :authority, Authority.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: System.get_env("USER"),

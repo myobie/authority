@@ -271,4 +271,10 @@ defmodule AuthorityWeb.AuthController do
       json(conn, token_response)
     end
   end
+
+  def token(conn, _params) do
+    conn
+    |> put_status(400)
+    |> json(%{error: "incorrect token parameters"})
+  end
 end

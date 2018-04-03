@@ -1,6 +1,8 @@
 defmodule AuthorityWeb.AuthControllerTest do
   import ShorterMaps
   use AuthorityWeb.ConnCase
+  alias Authority.Client
+  import Authority.Factory
 
   test "GET /v1/authorize redirects", ~M{conn} do
     resp =
@@ -176,5 +178,55 @@ defmodule AuthorityWeb.AuthControllerTest do
 
     assert resp.status == 302
     assert location_uri_params(resp)["error"] == "invalid_provider"
+  end
+
+  test "POST /v1/token requires a correct grant type", ~M{conn} do
+    {:ok, client} = Client.fetch("test")
+
+    resp =
+      post(conn, "/v1/token", %{
+        "code" => "abc",
+        "grant_type" => "bad_grant_type",
+        "redirect_uri" => client.redirect_uri,
+        "client_id" => client.client_id,
+        "client_secret" => client.client_secret
+      })
+
+    assert json_response(resp, 400)
+  end
+
+  test "POST /v1/token code flow works", ~M{conn} do
+    {:ok, client} = Client.fetch("test")
+    req = insert(:authorization_request)
+
+    resp =
+      post(conn, "/v1/token", %{
+        "code" => req.code,
+        "grant_type" => "authorization_code",
+        "redirect_uri" => client.redirect_uri,
+        "client_id" => client.client_id,
+        "client_secret" => client.client_secret
+      })
+
+    body = json_response(resp, 200)
+
+    assert body["refresh_token"] == req.refresh_token
+  end
+
+  test "POST /v1/token refresh flow works", ~M{conn} do
+    {:ok, client} = Client.fetch("test")
+    req = insert(:authorization_request, claimed_at: Timex.now())
+
+    resp =
+      post(conn, "/v1/token", %{
+        "grant_type" => "refresh_token",
+        "refresh_token" => req.refresh_token,
+        "client_id" => client.client_id,
+        "client_secret" => client.client_secret
+      })
+
+    body = json_response(resp, 200)
+
+    assert body["refresh_token"] != req.refresh_token
   end
 end
