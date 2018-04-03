@@ -35,7 +35,7 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequest do
     }
   end
 
-  @spec signed_id_token(t) :: binary
+  @spec signed_id_token(t) :: {:ok, binary}
   def signed_id_token(req) do
     {:ok, req
           |> id_token()
