@@ -17,13 +17,7 @@ defmodule Authority.Mixfile do
           :unmatched_returns,
           :error_handling,
           :race_conditions,
-          :underspecs,
-          :no_behaviours,
-          :no_fail_call,
-          :no_missing_calls,
-          :no_return,
-          :no_undefined_callbacks,
-          :no_unused
+          :underspecs
         ]
       ]
     ]
@@ -50,7 +44,7 @@ defmodule Authority.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:jose, "~> 1.8"},
-      {:timex, "~> 3.1"},
+      {:timex, "~> 3.2"},
       {:secure_random, "~> 0.5.1"},
       {:ueberauth, "~> 0.4"},
       {:ueberauth_github, "~> 0.4"},

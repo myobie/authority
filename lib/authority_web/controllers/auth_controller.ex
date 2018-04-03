@@ -109,7 +109,8 @@ defmodule AuthorityWeb.AuthController do
     Client.redirect_uri_match?(client, redirect_uri)
   end
 
-  @spec validate_scopes(String.t() | nil) :: {:ok, list(String.t())} | {:error, :invalid_scope | :scope_is_a_required_param}
+  @spec validate_scopes(String.t() | nil) ::
+          {:ok, list(String.t())} | {:error, :invalid_scope | :scope_is_a_required_param}
   defp validate_scopes(nil), do: {:error, :scope_is_a_required_param}
 
   defp validate_scopes(scope) do
@@ -126,7 +127,8 @@ defmodule AuthorityWeb.AuthController do
   end
 
   @spec validate_response_type(Client.t(), String.t()) ::
-          {:ok, String.t()} | {:error, :invalid_response_type | :response_type_is_a_required_param}
+          {:ok, String.t()}
+          | {:error, :invalid_response_type | :response_type_is_a_required_param}
   defp validate_response_type(_client, nil) do
     {:error, :response_type_is_a_required_param}
   end
@@ -165,7 +167,7 @@ defmodule AuthorityWeb.AuthController do
   end
 
   def callback(%{assigns: %{ueberauth_failure: fails}} = conn, _params) do
-    Logger.error("Authentication failure: #{inspect(fails)}")
+    _ = Logger.error("Authentication failure: #{inspect(fails)}")
 
     conn
     |> put_flash(:error, "Failed to authenticate.")

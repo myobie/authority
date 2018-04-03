@@ -1,12 +1,13 @@
 defmodule Authority.OpenID.JWT.Helpers do
   @jwk_types ["PS512", "RS512", "ES512"]
+  @type token :: <<_::16, _::_*8>>
 
-  @spec sign(map) :: {map, binary}
+  @spec sign(map) :: {map, token}
   def sign(jwt) do
     JOSE.JWT.sign(Authority.OpenID.jwk(), jwt) |> JOSE.JWS.compact()
   end
 
-  @spec sign!(map) :: binary
+  @spec sign!(map) :: token
   def sign!(jwt), do: jwt |> sign() |> elem(1)
 
   @spec verify(binary) :: {true, map} | {false, term}

@@ -1,5 +1,5 @@
 defmodule Authority.Client.Config do
-  @config Application.get_env(:authority, :clients)
+  @config Application.get_env(:authority, :clients, [])
           |> Enum.map(fn info ->
             providers =
               info
@@ -17,5 +17,6 @@ defmodule Authority.Client.Config do
             |> Map.put(:allowed_response_types, response_types)
           end)
 
+  @spec get :: [Authority.Client.t()]
   def get, do: @config
 end

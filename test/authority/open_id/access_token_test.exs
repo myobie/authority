@@ -19,7 +19,7 @@ defmodule Authority.OpenID.AccessTokenTest do
 
     assert token.iss == "iss"
     assert token.aud == "aud"
-    assert is_nil Map.get(token, :will_be_ignored)
-    assert is_nil Map.get(token, "will_be_ignored")
+    assert is_nil(Map.get(token, :will_be_ignored))
+    assert is_nil(Map.get(token, "will_be_ignored"))
   end
 end

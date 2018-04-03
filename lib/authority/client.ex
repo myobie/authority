@@ -5,8 +5,9 @@ defmodule Authority.Client do
             allowed_providers: [],
             allowed_response_types: []
 
-  @type t :: %__MODULE__{}
+  @type t :: %__MODULE__{client_id: String.t(), client_secret: String.t()}
 
+  @spec config :: [t]
   def config, do: Authority.Client.Config.get()
 
   @doc "Fetch a configured client by client_id"
@@ -27,14 +28,14 @@ defmodule Authority.Client do
       :ok
 
       iex> Client.secret_match?(%Client{client_secret: "xyz"}, "abc")
-      {:error, :missing_client}
+      {:error, :invalid_client_secret}
   """
-  @spec secret_match?(t, String.t()) :: :ok | {:error, :missing_client}
+  @spec secret_match?(t, String.t()) :: :ok | {:error, :invalid_client_secret}
   def secret_match?(client, secret) do
     if client.client_secret == secret do
       :ok
     else
-      {:error, :missing_client}
+      {:error, :invalid_client_secret}
     end
   end
 

@@ -3,6 +3,8 @@ defmodule Authority.OpenID.AuthorizationRequest do
   alias Authority.Account
   alias Authority.OpenID.{AccessToken, IDToken}
 
+  @type token :: <<_::16, _::_*8>>
+
   schema "authorization_requests" do
     field(:client_id, :string)
     field(:code, :string)
@@ -15,16 +17,15 @@ defmodule Authority.OpenID.AuthorizationRequest do
     timestamps()
   end
 
-  @type t :: %__MODULE__{}
+  @type t :: %__MODULE__{inserted_at: NaiveDateTime.t(), client_id: String.t()}
   @type opts :: [account: Account.t()]
 
   @expires_from_now [days: 2]
   @required_attributes [:client_id, :code, :refresh_token]
 
   @spec changeset(map, opts) :: Changeset.t() | no_return
-  @spec changeset(t | Changeset.t(), map, opts) :: Changeset.t() | no_return
-  def changeset(struct \\ %__MODULE__{}, params, account: account) do
-    struct
+  def changeset(params, account: account) do
+    %__MODULE__{}
     |> cast(params, @required_attributes ++ [:nonce])
     |> validate_required(@required_attributes)
     |> put_assoc(:account, account)
@@ -35,7 +36,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     change(request, %{claimed_at: Timex.now()})
   end
 
-  @spec id_token(t, keyword) :: IDToken.t()
+  @spec id_token(t, Timex.shift_options()) :: IDToken.t()
   def id_token(req, from_now \\ @expires_from_now) do
     %IDToken{
       iss: "#{AuthorityWeb.Endpoint.url()}/",
@@ -48,7 +49,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     }
   end
 
-  @spec signed_id_token(t, keyword) :: {:ok, binary}
+  @spec signed_id_token(t, Timex.shift_options()) :: {:ok, token}
   def signed_id_token(req, from_now \\ @expires_from_now) do
     {:ok,
      req
@@ -56,7 +57,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
      |> IDToken.sign!()}
   end
 
-  @spec access_token(t, keyword) :: AccessToken.t()
+  @spec access_token(t, Timex.shift_options()) :: AccessToken.t()
   def access_token(req, from_now \\ @expires_from_now) do
     %AccessToken{
       iss: "#{AuthorityWeb.Endpoint.url()}/",
@@ -68,7 +69,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     }
   end
 
-  @spec signed_access_token(t, keyword) :: {:ok, binary}
+  @spec signed_access_token(t, Timex.shift_options()) :: {:ok, token}
   def signed_access_token(req, from_now \\ @expires_from_now) do
     {:ok,
      req

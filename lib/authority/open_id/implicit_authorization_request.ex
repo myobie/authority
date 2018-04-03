@@ -10,6 +10,7 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequest do
   alias Authority.OpenID.IDToken
 
   @type t :: %__MODULE__{}
+  @type token :: <<_::16, _::_*8>>
 
   @expires_from_now [days: 2]
 
@@ -35,10 +36,11 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequest do
     }
   end
 
-  @spec signed_id_token(t) :: {:ok, binary}
+  @spec signed_id_token(t) :: {:ok, token}
   def signed_id_token(req) do
-    {:ok, req
-          |> id_token()
-          |> IDToken.sign!()}
+    {:ok,
+     req
+     |> id_token()
+     |> IDToken.sign!()}
   end
 end

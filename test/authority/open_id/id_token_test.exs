@@ -51,7 +51,7 @@ defmodule Authority.OpenID.IDTokenTest do
     assert info["auth_time"] == "auth_time"
     assert info["nonce"] == "nonce"
     assert info["another_key"] == "should end up outside claims"
-    assert is_nil info["claims"]
-    assert is_nil info[:claims]
+    assert is_nil(info["claims"])
+    assert is_nil(info[:claims])
   end
 end
