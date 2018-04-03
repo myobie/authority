@@ -38,7 +38,8 @@ defmodule Authority.OpenIDTest do
       account: account,
       email: "me@example.com",
       identity: identity,
-      client: client
+      client: client,
+      now: Timex.now()
     }
 
     {:ok, uri} = OpenID.implicit_callback_uri(req, "xyz")

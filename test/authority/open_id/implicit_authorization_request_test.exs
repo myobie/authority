@@ -14,7 +14,8 @@ defmodule Authority.OpenID.ImplicitAuthorizationRequestTest do
       email: "me@example.com",
       identity: identity,
       client: client,
-      nonce: "xyz"
+      nonce: "xyz",
+      now: Timex.now()
     }
 
     {:ok, ~M{account, client, identity, req}}
