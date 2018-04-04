@@ -1,5 +1,7 @@
 defmodule AuthorityWeb.UserInfoController do
   use AuthorityWeb, :controller
+  action_fallback AuthorityWeb.FallbackController
+
   alias Authority.{Account, OpenID, Repo}
 
   def show(conn, _parmas) do
@@ -31,7 +33,7 @@ defmodule AuthorityWeb.UserInfoController do
   end
 
   defp get_access_token_header_value(conn) do
-    case get_req_header(conn, "Authorization") do
+    case get_req_header(conn, "authorization") do
       ["Bearer " <> value] -> {:ok, value}
       _ -> {:error, :missing_access_token}
     end
