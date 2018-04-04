@@ -26,5 +26,8 @@ defmodule AuthorityWeb.Router do
 
     post("/token", AuthController, :token)
     delete("/logout", AuthController, :delete, as: :logout)
+
+    get("/userinfo", UserInfoController, :show)
+    post("/userinfo", UserInfoController, :show)
   end
 end

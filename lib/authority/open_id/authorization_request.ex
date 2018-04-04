@@ -11,6 +11,7 @@ defmodule Authority.OpenID.AuthorizationRequest do
     field(:nonce, :string)
     field(:refresh_token, :string)
     field(:claimed_at, :naive_datetime)
+    # TODO: add scope
 
     belongs_to(:account, Account)
 
