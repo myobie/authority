@@ -29,5 +29,7 @@ defmodule AuthorityWeb.Router do
 
     get("/userinfo", UserInfoController, :show)
     post("/userinfo", UserInfoController, :show)
+
+    get("/identities", IdentityController, :index)
   end
 end
