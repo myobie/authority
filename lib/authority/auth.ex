@@ -9,7 +9,7 @@ defmodule Authority.Auth do
         {:ok, result}
 
       {:error, failed_op, failed_value, changes} ->
-        _ = Logger.error("Problem creating records: #{inspect(changes)} - #{inspect({failed_op, failed_value})}")
+        _ = Logger.error("Problem creating records: #{inspect(changes)} - #{inspect({failed_op, failed_value})}", truncate: :infinity)
         # Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
         {:error, :failed_to_find_or_create_records}
 
