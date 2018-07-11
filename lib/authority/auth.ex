@@ -1,4 +1,5 @@
 defmodule Authority.Auth do
+  require Logger
   alias Authority.{Account, Email, Identity, Repo}
   import Ecto.Query
 
@@ -8,7 +9,9 @@ defmodule Authority.Auth do
         {:ok, result}
 
       {:error, failed_op, failed_value, changes} ->
-        Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
+        _ = Logger.error("Problem creating records: #{inspect(changes)} - #{inspect({failed_op, failed_value})}")
+        # Repo.rollback(%{op: failed_op, value: failed_value, changes: changes})
+        {:error, :failed_to_find_or_create_records}
 
       other ->
         IO.inspect(other)
