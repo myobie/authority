@@ -32,9 +32,9 @@ defmodule Authority.Identity do
     |> put_assoc(:account, account)
     |> foreign_key_constraint(:account_id)
     |> validate_required([:account, :provider, :uid, :access_token, :raw])
-    |> validate_length(:provider, max: 64)
-    |> validate_length(:uid, max: 256)
-    |> validate_length([:access_token, :refresh_token], max: 2048)
+    |> validate_length(:provider, max: 128)
+    |> validate_length(:uid, max: 1024)
+    |> validate_length([:access_token, :refresh_token], max: 8192)
     |> validate_length(:scope, max: 1024)
   end
 end
