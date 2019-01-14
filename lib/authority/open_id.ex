@@ -1,10 +1,12 @@
 defmodule Authority.OpenID do
-  @jwk Application.get_env(:authority, :jwk) |> JOSE.JWK.from()
+  @jwk Application.get_env(:authority, :jwk, "")
   @expires_from_now [days: 2]
 
   alias Authority.OpenID.{AuthorizationRequest, IDToken}
 
-  def jwk, do: @jwk
+  def jwk do
+    @jwk |> JOSE.JWK.from()
+  end
 
   @spec id_token(AuthorizationRequest.t) :: IDToken.t
   def id_token(%{claims: ["email"], email: %{address: address}} = req) do
